@@ -1,6 +1,6 @@
-@Task_Flow_HostAddress = http://localhost:5092
+@task_flow_HostAddress = http://localhost:5204
 
-GET {{Task_Flow_HostAddress}}/weatherforecast/
+GET {{task_flow_HostAddress}}/weatherforecast/
 Accept: application/json
 
 ###
