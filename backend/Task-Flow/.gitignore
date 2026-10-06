@@ -1,0 +1,60 @@
+# Build output
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code
+.vscode/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# NuGet
+packages/
+*.nupkg
+*.snupkg
+
+# Logs
+*.log
+
+# Test results
+TestResults/
+*.trx
+
+# Coverage
+coverage/
+*.coverage
+*.coveragexml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# ASP.NET local development certificates
+*.pfx
+
+# Local HTTPS certificate
+aspnetapp.pfx
+
+# User secrets
+secrets.json
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Publish output
+publish/
