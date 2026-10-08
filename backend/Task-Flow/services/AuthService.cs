@@ -1,5 +1,6 @@
 using System;
 using task_flow.dto;
+using task_flow.models;
 using task_flow.repositories;
 
 namespace task_flow.services;
@@ -61,14 +62,60 @@ public class AuthService : IAuthService
             User = new UserResponseDTO
             {
                 userId = user.id,
+                Username = user.Username,
                 Email = user.Email,
                 
             }
         };
     }
 
-    public async Task<string> RegisterAsync()
+    public async Task<UserResponseDTO> RegisterAsync(string username, string email, string password)
     {
-        
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        {
+            return new UserResponseDTO
+            {
+                userId = 0,
+                Username = "",
+                Email = "",
+                Message = "Invalid Credentials",
+                Success = false
+            };
+        }
+
+        var exists = await _userRepository.UserExistsByEmail(email);
+
+        if (exists)
+        {
+            return new UserResponseDTO
+            {
+                userId = 0,
+                Username = "",
+                Email = "",
+                Message = "User Already Exists!",
+                Success = false
+            };
+        }
+
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+
+        var newUser = new User
+        {
+            Email = email,
+            Username = username,
+            Password = hashedPassword
+        };
+
+        await _userRepository.AddAsync(newUser);
+
+        await _userRepository.SaveChangesAsync();
+
+
+        return new UserResponseDTO
+        {
+            userId = newUser.id,
+            Email = newUser.Email,
+            Username = newUser.Username,
+        };
     }
 }

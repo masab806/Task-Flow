@@ -30,4 +30,15 @@ public class UserRepository : IUserRepository
     {
         return await _dbSet.AnyAsync(u => u.Email.ToLower() == email.ToLower());
     }
+
+    public async Task<User?> AddAsync(User user)
+    {
+        var entry = await _dbSet.AddAsync(user);
+        return entry.Entity;
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }
