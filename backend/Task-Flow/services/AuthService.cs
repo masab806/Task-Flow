@@ -55,13 +55,13 @@ public class AuthService : IAuthService
             };
         }
 
-        var token = _jwtUtil.GenerateToken(user.id, email, password);
+        var tokenResp = _jwtUtil.GenerateToken(user.id, email, password);
 
         return new AuthResponseDTO
         {
             Success = true,
             Message = "User Logged In!",
-            Token = token.ToString(),
+            Token = tokenResp.Token.ToString(),
             User = new UserResponseDTO
             {
                 userId = user.id,
