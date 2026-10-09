@@ -1,5 +1,9 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using task_flow.data;
+using task_flow.utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +18,37 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(connectionString)
 );
+
+var jwtKey = builder.Configuration["Jwt:secretKey"];
+
+var issuer = builder.Configuration["Jwt:issuer"];
+
+var audience = builder.Configuration["Jwt:audience"];
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+       options.TokenValidationParameters = new TokenValidationParameters
+       {
+         ValidateIssuer = true,
+         ValidIssuer = issuer,
+
+         ValidateAudience = true,
+         ValidAudience = audience,
+
+         ValidateIssuerSigningKey = true,
+         IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(jwtKey)
+         ),
+
+         ValidateLifetime = true
+       }; 
+    });
+
+builder.Services.AddAuthentication();
+
+builder.Services.AddScoped<JwtUtil>();
 
 var app = builder.Build();
 

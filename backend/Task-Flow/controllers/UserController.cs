@@ -7,6 +7,7 @@ namespace task_flow.controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        
+        [HttpPost]
+        public IActionResult RegisterUser
     }
 }
