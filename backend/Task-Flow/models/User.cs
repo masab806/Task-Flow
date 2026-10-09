@@ -8,5 +8,6 @@ public class User
     public string Email {get; set;}
     public string Username {get; set;}
     public string Password {get; set;}
+    public string role {get; set;}
     public DateTimeOffset created_at {get; set;} = DateTime.UtcNow;
 }

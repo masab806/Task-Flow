@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using task_flow.data;
+using task_flow.repositories;
+using task_flow.services;
 using task_flow.utils;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,12 +14,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseNpgsql(connectionString)
 );
+
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var jwtKey = builder.Configuration["Jwt:secretKey"];
 
@@ -47,6 +53,8 @@ builder.Services
     });
 
 builder.Services.AddAuthentication();
+builder.Services.AddAuthorization();
+
 
 builder.Services.AddScoped<JwtUtil>();
 
@@ -61,6 +69,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
 
 
 app.MapGet("/health", ()=>

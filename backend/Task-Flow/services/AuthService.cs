@@ -2,16 +2,19 @@ using System;
 using task_flow.dto;
 using task_flow.models;
 using task_flow.repositories;
+using task_flow.utils;
 
 namespace task_flow.services;
 
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly JwtUtil _jwtUtil;
 
-    public AuthService(IUserRepository userRepository)
+    public AuthService(IUserRepository userRepository, JwtUtil jwtUtil)
     {
         _userRepository = userRepository;
+        _jwtUtil = jwtUtil;
     }
     public async Task<AuthResponseDTO> LoginAsync(string email, string password)
     {
@@ -52,26 +55,26 @@ public class AuthService : IAuthService
             };
         }
 
-        // TODO: Implement JWT Token
+        var token = _jwtUtil.GenerateToken(user.id, email, password);
 
         return new AuthResponseDTO
         {
             Success = true,
             Message = "User Logged In!",
-            Token = "abc",
+            Token = token.ToString(),
             User = new UserResponseDTO
             {
                 userId = user.id,
                 Username = user.Username,
                 Email = user.Email,
-                
+                role = user.role,
             }
         };
     }
 
-    public async Task<UserResponseDTO> RegisterAsync(string username, string email, string password)
+    public async Task<UserResponseDTO> RegisterAsync(string username, string email, string password, string role)
     {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
         {
             return new UserResponseDTO
             {
@@ -103,6 +106,7 @@ public class AuthService : IAuthService
         {
             Email = email,
             Username = username,
+            role = role,
             Password = hashedPassword
         };
 
@@ -116,6 +120,8 @@ public class AuthService : IAuthService
             userId = newUser.id,
             Email = newUser.Email,
             Username = newUser.Username,
+            role = newUser.role,
+            Success = true,
         };
     }
 }
