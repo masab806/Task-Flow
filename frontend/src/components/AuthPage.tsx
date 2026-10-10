@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, GitBranch, LockKeyhole, Mail } from 'lucide-react'
-import { type SignupData } from '../lib/types.d.ts'
+import type { SignupData } from '../lib/types.d.ts'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
