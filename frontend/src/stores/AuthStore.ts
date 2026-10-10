@@ -1,6 +1,6 @@
 import {create} from "zustand"
 import AuthService from "../services/AuthService"
-import type { User } from "../lib/types"
+import type { LoginData, User } from "../lib/types"
 
 interface AuthState {
     user: User | null;
@@ -10,7 +10,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-    login: (credentials: Record<string, any>) => Promise<void>
+    login: (credentials: LoginData) => Promise<void>
     logout: ()=> void
 }
 
@@ -22,7 +22,7 @@ export const AuthStore = create<AuthStore>((set)=> ({
     isLoading: false,
     error: null,
 
-    login: async (credentals)=> {
+    login: async (credentals: LoginData)=> {
         set({isLoading: true, error: null});
         try {
             const data = await AuthService.LoginUser(credentals)
