@@ -3,6 +3,8 @@ import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, GitBranch, LockKeyhole, Mail } from 'lucide-react'
 import type { SignupData } from '../lib/types.d.ts'
+import { Select } from '@base-ui/react/select'
+import { Button } from '@base-ui/react/button'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
@@ -20,6 +22,8 @@ const ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Opera
 const INPUT_BASE =
   'h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
 
+const SIGNUP_ROLES = ["Founder", "Employee"]
+
 const INITIAL_DATA: SignupData = {
   name: '',
   email: '',
@@ -29,14 +33,14 @@ const INITIAL_DATA: SignupData = {
   role: '',
 }
 
+
 function Logo({ variant }: { variant: 'light' | 'dark' }) {
   const isLight = variant === 'light'
   return (
     <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
       <span
-        className={`flex size-8 items-center justify-center rounded-xl text-sm font-bold ${
-          isLight ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'
-        }`}
+        className={`flex size-8 items-center justify-center rounded-xl text-sm font-bold ${isLight ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'
+          }`}
       >
         T
       </span>
@@ -57,7 +61,7 @@ export function AuthPage({
   const [data, setData] = useState<SignupData>(INITIAL_DATA)
 
   const isSignup = mode === 'signup'
-  const isOrgStep = isSignup && step === 'organization'
+  const isOrgStep = isSignup && step === 'organization' && data.role === "founder"
 
   // Always start a fresh flow when switching between login and signup
   useEffect(() => {
@@ -71,7 +75,7 @@ export function AuthPage({
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (isSignup && step === 'account') {
+    if (isSignup && step === 'account' && data.role === "founder") {
       setStep('organization')
       return
     }
@@ -141,13 +145,12 @@ export function AuthPage({
                   <div className="flex flex-1 gap-1.5">
                     <span className="h-1 flex-1 rounded-full bg-blue-600" />
                     <span
-                      className={`h-1 flex-1 rounded-full transition ${
-                        isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
-                      }`}
+                      className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
+                        }`}
                     />
                   </div>
                   <span className="text-xs font-medium text-slate-400">
-                    Step {isOrgStep ? 2 : 1} of 2
+                    Step {data.role === "founder" && isOrgStep ? 2 : 1} of 2
                   </span>
                 </div>
               ) : null}
@@ -208,6 +211,19 @@ export function AuthPage({
                       />
                     </div>
                   </label>
+
+                  {!isOrgStep && (
+                    <>
+                      {isSignup && (
+                        <div className="text-sm font-medium text-slate-700">
+                          <span className="mb-2 block">Role</span>
+                          <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5">
+                          
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
 
                   <label className="text-sm font-medium text-slate-700">
                     Password
