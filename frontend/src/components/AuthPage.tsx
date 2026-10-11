@@ -2,13 +2,19 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, GitBranch, LockKeyhole, Mail } from 'lucide-react'
-import type { SignupData } from '../lib/types.d.ts'
-import { Select } from '@base-ui/react/select'
 import { Button } from '@base-ui/react/button'
+import { Controller, useForm } from 'react-hook-form'
+import type { Resolver } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  ACCOUNT_STEP_FIELDS,
+  loginSchema,
+  signupSchema,
+  type AuthFormValues,
+} from "../lib/schema"
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
-
 
 const FEATURES = [
   'One clear view of every project',
@@ -17,22 +23,25 @@ const FEATURES = [
 ]
 
 const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '201–1,000', '1,000+']
-const ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Operations', 'Other']
+const JOB_ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Operations', 'Other']
+
+const SIGNUP_ROLES = [
+  { value: 'founder', label: 'Founder' },
+  { value: 'employee', label: 'Employee' },
+] as const
 
 const INPUT_BASE =
-  'h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100'
+  'h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 aria-invalid:border-red-400 aria-invalid:focus:ring-red-100'
 
-const SIGNUP_ROLES = ["Founder", "Employee"]
-
-const INITIAL_DATA: SignupData = {
+const DEFAULT_VALUES: Partial<AuthFormValues> = {
   name: '',
   email: '',
   password: '',
   organizationName: '',
   teamSize: '',
-  role: '',
+  jobRole: '',
+  // `role` intentionally left undefined until the user picks one
 }
-
 
 function Logo({ variant }: { variant: 'light' | 'dark' }) {
   const isLight = variant === 'light'
@@ -49,38 +58,84 @@ function Logo({ variant }: { variant: 'light' | 'dark' }) {
   )
 }
 
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null
+  return (
+    <p role="alert" className="mt-1.5 text-xs font-medium text-red-600">
+      {message}
+    </p>
+  )
+}
+
 export function AuthPage({
   mode,
   onSubmit,
 }: {
   mode: AuthMode
-  onSubmit?: (data: SignupData) => void
+  onSubmit?: (data: AuthFormValues) => void
 }) {
   const [showPassword, setShowPassword] = useState(false)
-  const [step, setStep] = useState<SignupStep>('organization')
-  const [data, setData] = useState<SignupData>(INITIAL_DATA)
+  const [step, setStep] = useState<SignupStep>('account')
 
   const isSignup = mode === 'signup'
-  const isOrgStep = isSignup && step === 'organization' && data.role === "founder"
+
+  const {
+    register,
+    control,
+    watch,
+    reset,
+    trigger,
+    setValue,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<AuthFormValues>({
+    resolver: zodResolver(
+      isSignup ? signupSchema : loginSchema,
+    ) as unknown as Resolver<AuthFormValues>,
+    defaultValues: DEFAULT_VALUES,
+    mode: 'onTouched',
+  })
+
+  const role = watch('role')
+  const teamSize = watch('teamSize')
+  const jobRole = watch('jobRole')
+
+  const isFounder = isSignup && role === 'founder'
+  const isOrgStep = isFounder && step === 'organization'
+  const totalSteps = isFounder ? 2 : 1
 
   // Always start a fresh flow when switching between login and signup
   useEffect(() => {
+    reset(DEFAULT_VALUES)
     setStep('account')
     setShowPassword(false)
-  }, [mode])
+  }, [mode, reset])
 
-  const update = (field: keyof SignupData) => (value: string) =>
-    setData((current) => ({ ...current, [field]: value }))
+  // If someone switches from Founder back to Employee, make sure we're not stuck on step 2
+  useEffect(() => {
+    if (!isFounder) setStep('account')
+  }, [isFounder])
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
+  const onValid = (values: AuthFormValues) => {
+    // Drop organization details for non-founders
+    const payload: AuthFormValues =
+      values.role === 'founder'
+        ? values
+        : { ...values, organizationName: '', teamSize: '', jobRole: '' }
 
-    if (isSignup && step === 'account' && data.role === "founder") {
-      setStep('organization')
+    onSubmit?.(payload)
+  }
+
+  const onFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    // Step 1 of the founder flow: validate only the account fields, then advance
+    if (isFounder && step === 'account') {
+      event.preventDefault()
+      const valid = await trigger([...ACCOUNT_STEP_FIELDS])
+      if (valid) setStep('organization')
       return
     }
 
-    onSubmit?.(data)
+    await handleSubmit(onValid)(event)
   }
 
   const title = isOrgStep
@@ -94,6 +149,8 @@ export function AuthPage({
     : isSignup
       ? "Start organizing your team's best work today."
       : 'Sign in to pick up where you left off.'
+
+  const submitLabel = !isSignup ? 'Sign in' : isFounder && !isOrgStep ? 'Continue' : 'Sign up'
 
   return (
     <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
@@ -144,13 +201,16 @@ export function AuthPage({
                 <div className="mb-5 flex items-center gap-3">
                   <div className="flex flex-1 gap-1.5">
                     <span className="h-1 flex-1 rounded-full bg-blue-600" />
-                    <span
-                      className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
-                        }`}
-                    />
+                    {isFounder && (
+                      <span
+                        className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
+                          }`}
+                      />
+                    )}
                   </div>
+
                   <span className="text-xs font-medium text-slate-400">
-                    Step {data.role === "founder" && isOrgStep ? 2 : 1} of 2
+                    Step {isOrgStep ? 2 : 1} of {totalSteps}
                   </span>
                 </div>
               ) : null}
@@ -177,21 +237,20 @@ export function AuthPage({
               </>
             )}
 
-            <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <form className="flex flex-col gap-4" onSubmit={onFormSubmit} noValidate>
               {!isOrgStep && (
                 <>
                   {isSignup && (
                     <label className="text-sm font-medium text-slate-700">
                       Full name
                       <input
-                        name="name"
                         autoComplete="name"
                         placeholder="Alex Morgan"
-                        required
-                        value={data.name}
-                        onChange={(event) => update('name')(event.target.value)}
+                        aria-invalid={!!errors.name}
+                        {...register('name')}
                         className={`${INPUT_BASE} mt-2 px-3.5`}
                       />
+                      <FieldError message={errors.name?.message} />
                     </label>
                   )}
 
@@ -200,29 +259,51 @@ export function AuthPage({
                     <div className="relative mt-2">
                       <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                       <input
-                        name="email"
                         type="email"
                         autoComplete="email"
                         placeholder="you@company.com"
-                        required
-                        value={data.email}
-                        onChange={(event) => update('email')(event.target.value)}
+                        aria-invalid={!!errors.email}
+                        {...register('email')}
                         className={`${INPUT_BASE} pl-10 pr-3.5`}
                       />
                     </div>
+                    <FieldError message={errors.email?.message} />
                   </label>
 
-                  {!isOrgStep && (
-                    <>
-                      {isSignup && (
-                        <div className="text-sm font-medium text-slate-700">
-                          <span className="mb-2 block">Role</span>
+                  {isSignup && (
+                    <div className="text-sm font-medium text-slate-700">
+                      <span className="mb-2 block">Role</span>
+                      <Controller
+                        name="role"
+                        control={control}
+                        render={({ field }) => (
                           <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-slate-50 p-1.5">
-                          
+                            {SIGNUP_ROLES.map((option) => {
+                              const isSelected = field.value === option.value
+
+                              return (
+                                <Button
+                                  key={option.value}
+                                  type="button"
+                                  aria-pressed={isSelected}
+                                  onClick={() => {
+                                    field.onChange(option.value)
+                                    field.onBlur()
+                                  }}
+                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
+                                      ? 'bg-blue-600 text-white'
+                                      : 'hover:bg-blue-500 hover:text-white'
+                                    }`}
+                                >
+                                  {option.label}
+                                </Button>
+                              )
+                            })}
                           </div>
-                        </div>
-                      )}
-                    </>
+                        )}
+                      />
+                      <FieldError message={errors.role?.message} />
+                    </div>
                   )}
 
                   <label className="text-sm font-medium text-slate-700">
@@ -230,14 +311,11 @@ export function AuthPage({
                     <div className="relative mt-2">
                       <LockKeyhole className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                       <input
-                        name="password"
                         type={showPassword ? 'text' : 'password'}
                         autoComplete={isSignup ? 'new-password' : 'current-password'}
                         placeholder={isSignup ? 'At least 8 characters' : 'Enter your password'}
-                        required
-                        minLength={isSignup ? 8 : undefined}
-                        value={data.password}
-                        onChange={(event) => update('password')(event.target.value)}
+                        aria-invalid={!!errors.password}
+                        {...register('password')}
                         className={`${INPUT_BASE} pl-10 pr-10`}
                       />
                       <button
@@ -249,6 +327,7 @@ export function AuthPage({
                         {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
                       </button>
                     </div>
+                    <FieldError message={errors.password?.message} />
                   </label>
 
                   {!isSignup && (
@@ -269,25 +348,22 @@ export function AuthPage({
                   <label className="text-sm font-medium text-slate-700">
                     Organization name
                     <input
-                      name="organizationName"
                       autoComplete="organization"
                       placeholder="Acme Inc."
-                      required
                       autoFocus
-                      value={data.organizationName}
-                      onChange={(event) => update('organizationName')(event.target.value)}
+                      aria-invalid={!!errors.organizationName}
+                      {...register('organizationName')}
                       className={`${INPUT_BASE} mt-2 px-3.5`}
                     />
+                    <FieldError message={errors.organizationName?.message} />
                   </label>
 
                   <label className="text-sm font-medium text-slate-700">
                     Team size
                     <select
-                      name="teamSize"
-                      required
-                      value={data.teamSize}
-                      onChange={(event) => update('teamSize')(event.target.value)}
-                      className={`${INPUT_BASE} mt-2 px-3 ${data.teamSize ? '' : 'text-slate-400'}`}
+                      aria-invalid={!!errors.teamSize}
+                      {...register('teamSize')}
+                      className={`${INPUT_BASE} mt-2 px-3 ${teamSize ? '' : 'text-slate-400'}`}
                     >
                       <option value="" disabled>
                         Select team size
@@ -298,26 +374,26 @@ export function AuthPage({
                         </option>
                       ))}
                     </select>
+                    <FieldError message={errors.teamSize?.message} />
                   </label>
 
                   <label className="text-sm font-medium text-slate-700">
                     Your role
                     <select
-                      name="role"
-                      required
-                      value={data.role}
-                      onChange={(event) => update('role')(event.target.value)}
-                      className={`${INPUT_BASE} mt-2 px-3 ${data.role ? '' : 'text-slate-400'}`}
+                      aria-invalid={!!errors.jobRole}
+                      {...register('jobRole')}
+                      className={`${INPUT_BASE} mt-2 px-3 ${jobRole ? '' : 'text-slate-400'}`}
                     >
                       <option value="" disabled>
                         Select your role
                       </option>
-                      {ROLES.map((role) => (
-                        <option key={role} value={role} className="text-slate-950">
-                          {role}
+                      {JOB_ROLES.map((item) => (
+                        <option key={item} value={item} className="text-slate-950">
+                          {item}
                         </option>
                       ))}
                     </select>
+                    <FieldError message={errors.jobRole?.message} />
                   </label>
                 </>
               )}
@@ -335,9 +411,10 @@ export function AuthPage({
                 )}
                 <button
                   type="submit"
-                  className="flex h-11 p-1 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+                  disabled={isSubmitting}
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 p-1 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {isSignup ? (isOrgStep ? 'Create account' : 'Continue') : 'Sign in'}
+                  {submitLabel}
                   <ArrowRight className="size-4" />
                 </button>
               </div>
