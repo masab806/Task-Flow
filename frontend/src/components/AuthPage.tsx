@@ -12,6 +12,8 @@ import {
   signupSchema,
   type AuthFormValues,
 } from "../lib/schema"
+import Logo from './Logo'
+import { FieldError } from '../lib/helpers'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
@@ -40,31 +42,6 @@ const DEFAULT_VALUES: Partial<AuthFormValues> = {
   organizationName: '',
   teamSize: '',
   jobRole: '',
-  // `role` intentionally left undefined until the user picks one
-}
-
-function Logo({ variant }: { variant: 'light' | 'dark' }) {
-  const isLight = variant === 'light'
-  return (
-    <span className="flex items-center gap-2 text-lg font-bold tracking-tight">
-      <span
-        className={`flex size-8 items-center justify-center rounded-xl text-sm font-bold ${isLight ? 'bg-white text-blue-600' : 'bg-blue-600 text-white'
-          }`}
-      >
-        T
-      </span>
-      TaskFlow
-    </span>
-  )
-}
-
-function FieldError({ message }: { message?: string }) {
-  if (!message) return null
-  return (
-    <p role="alert" className="mt-1.5 text-xs font-medium text-red-600">
-      {message}
-    </p>
-  )
 }
 
 export function AuthPage({
@@ -241,7 +218,7 @@ export function AuthPage({
                       Full name
                       <input
                         autoComplete="name"
-                        placeholder="Alex Morgan"
+                        placeholder="Your Name"
                         aria-invalid={!!errors.name}
                         {...register('name')}
                         className={`${INPUT_BASE} mt-2 px-3.5`}
@@ -420,7 +397,7 @@ export function AuthPage({
               <p className="mt-7 text-center text-sm text-slate-500">
                 {isSignup ? 'Already have an account?' : 'New to TaskFlow?'}{' '}
                 <Link
-                  to={isSignup ? '/login' : '/signup'}
+                  to={isSignup ? '/' : '/signin'}
                   className="font-semibold text-blue-600 hover:text-blue-700"
                 >
                   {isSignup ? 'Sign in' : 'Create an account'}

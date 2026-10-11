@@ -24,7 +24,6 @@ export const signupSchema = z
       .regex(/\d/, 'Include at least one number'),
     role: z.enum(['founder', 'employee'], { message: 'Choose a role' }),
 
-    // Organization step (only required for founders)
     organizationName: z.string().trim(),
     teamSize: z.string(),
     jobRole: z.string(),
