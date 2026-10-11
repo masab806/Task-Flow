@@ -17,13 +17,16 @@ namespace task_flow.controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult> RegisterUser([FromBody] UserRegistrationDTO dto)
+        public async Task<ActionResult> RegisterFounder([FromBody] FounderRegistrationDTO dto)
         {
             var result = await _authService.RegisterAsync(
-                dto.Username,
-                dto.Email,
-                dto.Password,
-                dto.Role
+                dto.FullName,
+                dto.WorkEmail,
+                dto.Role,
+                dto.CompanyDesignation,
+                dto.OrganizationName,
+                dto.TeamSize,
+                dto.Password
             );
 
             if (!result.Success)

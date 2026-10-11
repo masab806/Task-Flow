@@ -169,7 +169,7 @@ export function AuthPage({
               <Logo variant="dark" />
             </div>
 
-            <div className="mb-8">
+            <div className="mb-4">
               {isSignup ? (
                 <div className="mb-5 flex items-center gap-3">
                   <div className="flex flex-1 gap-1.5">
@@ -191,7 +191,7 @@ export function AuthPage({
               <h2 className="mt-2 text-3xl font-bold tracking-tight">{title}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">{subtitle}</p>
             </div>
-
+{/* 
             {!isOrgStep && (
               <>
                 <button
@@ -208,7 +208,7 @@ export function AuthPage({
                   <span className="h-px flex-1 bg-slate-200" />
                 </div>
               </>
-            )}
+            )} */}
 
             <form className="flex flex-col gap-4" onSubmit={onFormSubmit} noValidate>
               {!isOrgStep && (
@@ -264,8 +264,8 @@ export function AuthPage({
                                     field.onBlur()
                                   }}
                                   className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
-                                      ? 'bg-blue-600 text-white'
-                                      : 'hover:bg-blue-500 hover:text-white'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'hover:bg-blue-500 hover:text-white'
                                     }`}
                                 >
                                   {option.label}
@@ -277,6 +277,24 @@ export function AuthPage({
                       />
                       <FieldError message={errors.role?.message} />
                     </div>
+                  )}
+
+                  {!isFounder && (
+                    <label className="text-sm font-medium text-slate-700">
+                      Organization Name
+                      <div className="relative mt-2">
+                        <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type="email"
+                          autoComplete="email"
+                          placeholder="you@company.com"
+                          aria-invalid={!!errors.email}
+                          {...register("organizationName")}
+                          className={`${INPUT_BASE} pl-10 pr-3.5`}
+                        />
+                      </div>
+                      <FieldError message={errors.organizationName?.message} />
+                    </label>
                   )}
 
                   <label className="text-sm font-medium text-slate-700">
@@ -394,7 +412,7 @@ export function AuthPage({
             </form>
 
             {!isOrgStep && (
-              <p className="mt-7 text-center text-sm text-slate-500">
+              <p className="mt-6 text-center text-sm text-slate-500">
                 {isSignup ? 'Already have an account?' : 'New to TaskFlow?'}{' '}
                 <Link
                   to={isSignup ? '/' : '/signin'}
@@ -405,7 +423,7 @@ export function AuthPage({
               </p>
             )}
 
-            <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
+            {/* <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
               By continuing, you agree to TaskFlow&apos;s{' '}
               <Link to="#" className="underline underline-offset-2">
                 Terms of Service
@@ -415,7 +433,7 @@ export function AuthPage({
                 Privacy Policy
               </Link>
               .
-            </p>
+            </p> */}
           </div>
         </section>
       </div>

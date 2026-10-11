@@ -23,12 +23,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetUserByEmail(string email)
     {
-        return await _dbSet.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower());
+        return await _dbSet.FirstOrDefaultAsync(u => u.WorkEmail.ToLower() == email.ToLower());
     }
 
     public async Task<bool> UserExistsByEmail(string email)
     {
-        return await _dbSet.AnyAsync(u => u.Email.ToLower() == email.ToLower());
+        return await _dbSet.AnyAsync(u => u.WorkEmail.ToLower() == email.ToLower());
     }
 
     public async Task<User?> AddAsync(User user)

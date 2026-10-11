@@ -16,112 +16,55 @@ public class AuthService : IAuthService
         _userRepository = userRepository;
         _jwtUtil = jwtUtil;
     }
-    public async Task<AuthResponseDTO> LoginAsync(string email, string password)
+
+    public async Task<UserResponseDTO> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string Role, string TeamSize, string CompanyDesignation)
     {
-
-        if(string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-        {
-            return new AuthResponseDTO
-            {
-                Message = "Invalid Credentials",
-                Token = "",
-                Success = false,   
-            };
-        }
-
-        var exists = await _userRepository.UserExistsByEmail(email);
-
-        if (!exists)
-        {
-            return new AuthResponseDTO
-            {
-                Message = "Invalid Credentials!",
-                Token = "",
-                Success = false,
-            };
-        }
-
-        var user = await _userRepository.GetUserByEmail(email);
-
-        var isMatch = BCrypt.Net.BCrypt.Verify(password, user.Password);
-
-        if (!isMatch)
-        {
-            return new AuthResponseDTO
-            {
-                Success = false,
-                Message = "Invalid Credentials!",
-                Token = "",
-            };
-        }
-
-        var tokenResp = _jwtUtil.GenerateToken(user.id, email, password);
-
-        return new AuthResponseDTO
-        {
-            Success = true,
-            Message = "User Logged In!",
-            Token = tokenResp.Token.ToString(),
-            User = new UserResponseDTO
-            {
-                userId = user.id,
-                Username = user.Username,
-                Email = user.Email,
-                role = user.role,
-            }
-        };
-    }
-
-    public async Task<UserResponseDTO> RegisterAsync(string username, string email, string password, string role)
-    {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password) || string.IsNullOrWhiteSpace(role))
+        if(string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(Password))
         {
             return new UserResponseDTO
             {
                 userId = 0,
-                Username = "",
-                Email = "",
+                FullName = "",
+                role = "",
                 Message = "Invalid Credentials",
-                Success = false
+                Success = false,
             };
         }
 
-        var exists = await _userRepository.UserExistsByEmail(email);
+        var exists = await _userRepository.UserExistsByEmail(WorkEmail);
 
         if (exists)
         {
-            return new UserResponseDTO
+             return new UserResponseDTO
             {
                 userId = 0,
-                Username = "",
-                Email = "",
-                Message = "User Already Exists!",
-                Success = false
+                FullName = "",
+                role = "",
+                Message = "Invalid Credentials",
+                Success = false,
             };
         }
+        
 
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(password);
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
 
-        var newUser = new User
+        var newFounder = new Founder
         {
-            Email = email,
-            Username = username,
-            role = role,
+            WorkEmail = WorkEmail,
+            FullName = FullName,
+            CompanyDesignation = CompanyDesignation,
+            CompanyRole = CompanyRole,
+            OrganizationName = OrganizationName,
+            TeamSize = TeamSize,
             Password = hashedPassword
         };
 
-        await _userRepository.AddAsync(newUser);
-
-        await _userRepository.SaveChangesAsync();
-
-
         return new UserResponseDTO
         {
-            userId = newUser.id,
-            Email = newUser.Email,
-            Username = newUser.Username,
-            role = newUser.role,
-            Success = true,
+            userId = newFounder.id,
+            FullName = newFounder.FullName
         };
+
     }
+
 }
