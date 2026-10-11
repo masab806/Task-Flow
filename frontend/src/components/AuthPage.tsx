@@ -104,20 +104,17 @@ export function AuthPage({
   const isOrgStep = isFounder && step === 'organization'
   const totalSteps = isFounder ? 2 : 1
 
-  // Always start a fresh flow when switching between login and signup
   useEffect(() => {
     reset(DEFAULT_VALUES)
     setStep('account')
     setShowPassword(false)
   }, [mode, reset])
 
-  // If someone switches from Founder back to Employee, make sure we're not stuck on step 2
   useEffect(() => {
     if (!isFounder) setStep('account')
   }, [isFounder])
 
   const onValid = (values: AuthFormValues) => {
-    // Drop organization details for non-founders
     const payload: AuthFormValues =
       values.role === 'founder'
         ? values
@@ -127,7 +124,6 @@ export function AuthPage({
   }
 
   const onFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    // Step 1 of the founder flow: validate only the account fields, then advance
     if (isFounder && step === 'account') {
       event.preventDefault()
       const valid = await trigger([...ACCOUNT_STEP_FIELDS])
