@@ -12,13 +12,13 @@ public class AuthService : IAuthService
 {
     private readonly IFounderRepository _founderRepository;
     private readonly IOrganizationRepository _organizationRepository;
-
     private readonly IEmployeeRepository _employeeRepository;
     private readonly JwtUtil _jwtUtil;
 
-    public AuthService(IFounderRepository founderRepository, JwtUtil jwtUtil)
+    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, JwtUtil jwtUtil)
     {
         _founderRepository = founderRepository;
+        _organizationRepository = organizationRepository;
         _jwtUtil = jwtUtil;
     }
 
@@ -45,6 +45,7 @@ public class AuthService : IAuthService
                 FullName = "",
                 WorkEmail = "",
                 OrganizationName = "",
+                Message = "Founder Exists!"
             };
         }
 
@@ -71,8 +72,8 @@ public class AuthService : IAuthService
             TeamSize = TeamSize
         };
 
-        _organizationRepository.AddOrganization(newOrganization);
-        _organizationRepository.SaveChangesAsync();
+       await _organizationRepository.AddOrganization(newOrganization);
+       await _organizationRepository.SaveChangesAsync();
 
         return new FounderResponse
         {

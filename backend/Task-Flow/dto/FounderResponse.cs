@@ -8,4 +8,5 @@ public class FounderResponse
     public string FullName {get; set;}
     public string OrganizationName {get; set;}
     public string WorkEmail {get; set;}
+    public string Message {get; set;} = "";
 }

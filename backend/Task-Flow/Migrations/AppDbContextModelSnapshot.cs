@@ -22,6 +22,44 @@ namespace task_flow.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("task_flow.models.Employee", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<string>("CompanyRole")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Organizationid")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("WorkEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("id");
+
+                    b.HasIndex("Organizationid");
+
+                    b.ToTable("Employees");
+                });
+
             modelBuilder.Entity("task_flow.models.Founder", b =>
                 {
                     b.Property<int>("id")
@@ -65,6 +103,27 @@ namespace task_flow.Migrations
                     b.HasKey("id");
 
                     b.ToTable("Founders");
+                });
+
+            modelBuilder.Entity("task_flow.models.Organization", b =>
+                {
+                    b.Property<int>("id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
+
+                    b.Property<string>("OrganizationName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TeamSize")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("id");
+
+                    b.ToTable("Organizations");
                 });
 
             modelBuilder.Entity("task_flow.models.Project", b =>
@@ -120,6 +179,17 @@ namespace task_flow.Migrations
                     b.HasIndex("ProjectId");
 
                     b.ToTable("Tasks");
+                });
+
+            modelBuilder.Entity("task_flow.models.Employee", b =>
+                {
+                    b.HasOne("task_flow.models.Organization", "Organization")
+                        .WithMany()
+                        .HasForeignKey("Organizationid")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Organization");
                 });
 
             modelBuilder.Entity("task_flow.models.TaskItem", b =>
