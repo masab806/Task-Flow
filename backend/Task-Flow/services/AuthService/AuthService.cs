@@ -2,49 +2,49 @@ using System;
 using task_flow.dto;
 using task_flow.models;
 using task_flow.repositories;
+using task_flow.repositories.OrganizationRepository;
 using task_flow.utils;
 
 namespace task_flow.services;
 
 public class AuthService : IAuthService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IFounderRepository _founderRepository;
+    private readonly IOrganizationRepository _organizationRepository;
     private readonly JwtUtil _jwtUtil;
 
-    public AuthService(IUserRepository userRepository, JwtUtil jwtUtil)
+    public AuthService(IFounderRepository founderRepository, JwtUtil jwtUtil)
     {
-        _userRepository = userRepository;
+        _founderRepository = founderRepository;
         _jwtUtil = jwtUtil;
     }
 
-    public async Task<UserResponseDTO> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string Role, string TeamSize, string CompanyDesignation)
+    public async Task<FounderResponse> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string TeamSize, string CompanyDesignation)
     {
-        if(string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(FullName) || string.IsNullOrWhiteSpace(Password))
         {
-            return new UserResponseDTO
+            return new FounderResponse
             {
-                userId = 0,
+                FounderId = 0,
                 FullName = "",
-                role = "",
-                Message = "Invalid Credentials",
-                Success = false,
+                WorkEmail = "",
+                OrganizationName = "",
             };
         }
 
-        var exists = await _userRepository.UserExistsByEmail(WorkEmail);
+        var exists = await _founderRepository.FounderExistsByEmail(WorkEmail);
 
         if (exists)
         {
-             return new UserResponseDTO
+            return new FounderResponse
             {
-                userId = 0,
+                FounderId = 0,
                 FullName = "",
-                role = "",
-                Message = "Invalid Credentials",
-                Success = false,
+                WorkEmail = "",
+                OrganizationName = "",
             };
         }
-        
+
 
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
 
@@ -59,12 +59,42 @@ public class AuthService : IAuthService
             Password = hashedPassword
         };
 
-        return new UserResponseDTO
+        await _founderRepository.AddAsync(newFounder);
+        await _founderRepository.SaveChangesAsync();
+
+        var newOrganization = new Organization
         {
-            userId = newFounder.id,
-            FullName = newFounder.FullName
+            OrganizationName = OrganizationName,
+            TeamSize = TeamSize
         };
 
+        _organizationRepository.AddOrganization(newOrganization);
+        _organizationRepository.SaveChangesAsync();
+
+        return new FounderResponse
+        {
+            FounderId = newFounder.id,
+            FullName = newFounder.FullName,
+            OrganizationName = newFounder.OrganizationName,
+            WorkEmail = newFounder.WorkEmail,
+        };
     }
 
+    public async Task<UserResponseDTO> LoginUser(string WorkEmail, string Password)
+    {
+        if(string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(Password))
+        {
+            return new UserResponseDTO
+            {
+                userId = 0,
+                FullName = "",
+                WorkEmail = "",
+                Message = "Invalid Credentials",
+                Role = "",
+                Success = false
+            };
+        }
+
+        var user = await
+    }
 }

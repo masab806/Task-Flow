@@ -12,4 +12,5 @@ public class Founder
     public string OrganizationName { get; set; } = string.Empty;
     public string CompanyDesignation { get; set; } = string.Empty;
     public string TeamSize {get; set;} = string.Empty;
+    public string Role {get; set;} = "Founder";
 }

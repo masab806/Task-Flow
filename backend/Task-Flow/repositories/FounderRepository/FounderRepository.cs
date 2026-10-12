@@ -5,35 +5,35 @@ using task_flow.models;
 
 namespace task_flow.repositories;
 
-public class UserRepository : IUserRepository
+public class FounderRepository : IFounderRepository
 {
     private readonly AppDbContext _context;
-    private readonly DbSet<User> _dbSet;
+    private readonly DbSet<Founder> _dbSet;
 
-    public UserRepository(AppDbContext context)
+    public FounderRepository(AppDbContext context)
     {
         _context = context;
-        _dbSet = context.Set<User>();
+        _dbSet = context.Set<Founder>();
     }
 
-    public async Task<User?> GetUserById(int userId)
+    public async Task<Founder?> GetFounderById(int founderId)
     {
-        return await _dbSet.FindAsync(userId);
+        return await _dbSet.FindAsync(founderId);
     }
 
-    public async Task<User?> GetUserByEmail(string email)
+    public async Task<Founder?> GetFounderByEmail(string email)
     {
         return await _dbSet.FirstOrDefaultAsync(u => u.WorkEmail.ToLower() == email.ToLower());
     }
 
-    public async Task<bool> UserExistsByEmail(string email)
+    public async Task<bool> FounderExistsByEmail(string email)
     {
         return await _dbSet.AnyAsync(u => u.WorkEmail.ToLower() == email.ToLower());
     }
 
-    public async Task<User?> AddAsync(User user)
+    public async Task<Founder?> AddAsync(Founder founder)
     {
-        var entry = await _dbSet.AddAsync(user);
+        var entry = await _dbSet.AddAsync(founder);
         return entry.Entity;
     }
 

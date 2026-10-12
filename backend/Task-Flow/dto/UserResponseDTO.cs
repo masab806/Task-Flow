@@ -8,6 +8,6 @@ public class UserResponseDTO
     public string WorkEmail {get; set;} = "";
     public string FullName {get; set;} = "";
     public string Message {get; set;} = "";
-    public string role {get; set;}
+    public string Role {get; set;}
     public bool Success {get; set;} = false;
 }
