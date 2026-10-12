@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+
 using Microsoft.AspNetCore.Mvc;
 using task_flow.dto;
 using task_flow.services;
@@ -17,40 +17,42 @@ namespace task_flow.controllers
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult> RegisterFounder([FromBody] FounderRegistrationDTO dto)
+        public async Task<ActionResult> RegisterFounder(
+            [FromBody] FounderRegistrationDTO dto)
         {
-            var result = await _authService.RegisterAsync(
-                dto.FullName,
-                dto.WorkEmail,
+            var result = await _authService.RegisterFounder(
                 dto.Role,
-                dto.CompanyDesignation,
+                dto.WorkEmail,
+                dto.FullName,
+                dto.Password,
                 dto.OrganizationName,
                 dto.TeamSize,
-                dto.Password
+                dto.CompanyDesignation
             );
 
-            if (!result.Success)
+            if (result.FounderId == 0)
             {
                 return BadRequest(result);
-            };
+            }
 
             return Ok(result);
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult> LoginUser([FromBody] UserLoginDTO dto)
+        public async Task<ActionResult> LoginUser(
+            [FromBody] UserLoginDTO dto)
         {
-            var result = await _authService.LoginAsync(
+            var result = await _authService.LoginUser(
                 dto.Email,
                 dto.Password
             );
 
-            if(!result.Success)
+            if (!result.Success)
             {
-                return BadRequest(result);
-            };
+                return Unauthorized(result);
+            }
 
             return Ok(result);
         }
-    };    
+    }
 }
