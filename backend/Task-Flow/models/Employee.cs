@@ -8,6 +8,7 @@ public class Employee
     public string FullName {get; set;}
     public string WorkEmail {get; set;}
     public string CompanyRole {get; set;}
+    public string Password {get; set;}
     public string Role {get; set;}
     public Organization Organization {get; set;}
 }

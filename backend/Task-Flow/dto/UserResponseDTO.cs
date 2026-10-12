@@ -10,4 +10,5 @@ public class UserResponseDTO
     public string Message {get; set;} = "";
     public string Role {get; set;}
     public bool Success {get; set;} = false;
+    public string Token {get; set;} = "";
 }

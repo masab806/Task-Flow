@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using task_flow.data;
 using task_flow.repositories;
+using task_flow.repositories.EmployeeRepository;
+using task_flow.repositories.OrganizationRepository;
 using task_flow.services;
 using task_flow.utils;
 
@@ -22,7 +24,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
 );
 
-builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IFounderRepository, FounderRepository>();
+builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 
 var jwtKey = builder.Configuration["Jwt:secretKey"];

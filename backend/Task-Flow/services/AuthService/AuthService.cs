@@ -2,6 +2,7 @@ using System;
 using task_flow.dto;
 using task_flow.models;
 using task_flow.repositories;
+using task_flow.repositories.EmployeeRepository;
 using task_flow.repositories.OrganizationRepository;
 using task_flow.utils;
 
@@ -11,6 +12,8 @@ public class AuthService : IAuthService
 {
     private readonly IFounderRepository _founderRepository;
     private readonly IOrganizationRepository _organizationRepository;
+
+    private readonly IEmployeeRepository _employeeRepository;
     private readonly JwtUtil _jwtUtil;
 
     public AuthService(IFounderRepository founderRepository, JwtUtil jwtUtil)
@@ -95,6 +98,58 @@ public class AuthService : IAuthService
             };
         }
 
-        var founder = await
+        var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
+
+        if(founder != null && BCrypt.Net.BCrypt.Verify(Password, founder.Password))
+        {
+            var token = _jwtUtil.GenerateToken(
+                founder.id,
+                founder.WorkEmail,
+                "Founder"
+            );
+
+            return new UserResponseDTO
+            {
+                userId = founder.id,
+                FullName = founder.FullName,
+                WorkEmail = founder.WorkEmail,
+                Message = "Message Successful",
+                Role = "Founder",
+                Success = true,
+                Token = token.Token,
+            };
+        }
+
+        var employee =  await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+
+        if(employee != null && BCrypt.Net.BCrypt.Verify(Password, employee.Password))
+        {
+            var token = _jwtUtil.GenerateToken(
+                employee.id,
+                employee.WorkEmail,
+                "Employee"
+            );
+
+            return new UserResponseDTO
+            {
+                userId = employee.id,
+                FullName = employee.FullName,
+                WorkEmail = employee.WorkEmail,
+                Message = "Login Successful",
+                Role = "Employee",
+                Success = true,
+                Token = token.Token,
+            };
+        }
+
+        return new UserResponseDTO
+        {
+            userId = 0,
+            FullName = "",
+            WorkEmail = "",
+            Message = "Invalid Credentials",
+            Success = false,
+            Token = ""
+        };
     }
 }
