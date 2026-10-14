@@ -24,6 +24,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString)
 );
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy => 
+        policy.WithOrigins("http://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
+
 builder.Services.AddScoped<IFounderRepository, FounderRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
@@ -76,7 +84,7 @@ app.UseHttpsRedirection();
 
 app.UseRouting();
 
-app.UseCors();
+app.UseCors("Frontend");
 
 app.UseAuthentication();
 app.UseAuthorization();

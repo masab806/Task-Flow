@@ -15,10 +15,11 @@ public class AuthService : IAuthService
     private readonly IEmployeeRepository _employeeRepository;
     private readonly JwtUtil _jwtUtil;
 
-    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, JwtUtil jwtUtil)
+    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, JwtUtil jwtUtil)
     {
         _founderRepository = founderRepository;
         _organizationRepository = organizationRepository;
+        _employeeRepository = employeeRepository;
         _jwtUtil = jwtUtil;
     }
 
@@ -32,6 +33,7 @@ public class AuthService : IAuthService
                 FullName = "",
                 WorkEmail = "",
                 OrganizationName = "",
+                Message = "Incomplete Fields!"
             };
         }
 
@@ -63,6 +65,18 @@ public class AuthService : IAuthService
             Password = hashedPassword
         };
 
+        if(newFounder == null)
+        {
+            return new FounderResponse
+            {
+                FounderId = 0,
+                FullName = "",
+                WorkEmail = "",
+                OrganizationName = "",
+                Message = "Founder Not Registered!"
+            };
+        }
+
         await _founderRepository.AddAsync(newFounder);
         await _founderRepository.SaveChangesAsync();
 
@@ -71,6 +85,14 @@ public class AuthService : IAuthService
             OrganizationName = OrganizationName,
             TeamSize = TeamSize
         };
+
+        if(newOrganization == null)
+        {
+            return new FounderResponse
+            {
+                Message = "Organization Not Created"
+            };
+        }
 
        await _organizationRepository.AddOrganization(newOrganization);
        await _organizationRepository.SaveChangesAsync();

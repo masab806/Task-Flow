@@ -1,11 +1,22 @@
-export type SignupData = {
-  name: string
-  email: string
+export type FounderSignupData = {
+  fullName: string
+  workEmail: string
   password: string
   organizationName: string
+  role: 'founder'
   teamSize: string
-  role: string
+  companyDesignation: string
 }
+
+export type EmployeeSignupData = {
+  fullName: string
+  workEmail: string
+  password: string
+  organizationName: string
+  role: 'employee'
+}
+
+export type SignupPayload = FounderSignupData | EmployeeSignupData
 
 export type LoginData = {
   email: string,

@@ -1,7 +1,16 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Check, Eye, EyeOff, GitBranch, LockKeyhole, Mail } from 'lucide-react'
+import {
+  ArrowLeft,
+  ArrowRight,
+  Building2,
+  Check,
+  Eye,
+  EyeOff,
+  LockKeyhole,
+  Mail,
+} from 'lucide-react'
 import { Button } from '@base-ui/react/button'
 import { Controller, useForm } from 'react-hook-form'
 import type { Resolver } from 'react-hook-form'
@@ -10,10 +19,14 @@ import {
   ACCOUNT_STEP_FIELDS,
   loginSchema,
   signupSchema,
+  toSignupPayload,
   type AuthFormValues,
-} from "../lib/schema"
+} from '../lib/schema'
 import Logo from './Logo'
 import { FieldError } from '../lib/helpers'
+import AuthService from '../services/AuthService'
+import toast from 'react-hot-toast'
+import { isAxiosError } from 'axios'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
@@ -62,7 +75,6 @@ export function AuthPage({
     watch,
     reset,
     trigger,
-    setValue,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<AuthFormValues>({
@@ -78,6 +90,7 @@ export function AuthPage({
   const jobRole = watch('jobRole')
 
   const isFounder = isSignup && role === 'founder'
+  const isEmployee = isSignup && role === 'employee'
   const isOrgStep = isFounder && step === 'organization'
   const totalSteps = isFounder ? 2 : 1
 
@@ -91,13 +104,35 @@ export function AuthPage({
     if (!isFounder) setStep('account')
   }, [isFounder])
 
-  const onValid = (values: AuthFormValues) => {
-    const payload: AuthFormValues =
-      values.role === 'founder'
-        ? values
-        : { ...values, organizationName: '', teamSize: '', jobRole: '' }
+  const onValid = async (values: AuthFormValues) => {
+    // Only for the UI callback; the API receives the real values below
+    const uiPayload: AuthFormValues =
+      values.role === 'founder' ? values : { ...values, teamSize: '', jobRole: '' }
 
-    onSubmit?.(payload)
+    try {
+      if (!isSignup) {
+        const result = await AuthService.LoginUser({
+          email: values.email,
+          password: values.password,
+        })
+        console.log(result.message)
+        toast.success('Welcome back!')
+      } else {
+        const result = await AuthService.RegisterUser(toSignupPayload(values))
+        console.log(result.message)
+        toast.success('Account created successfully!')
+      }
+
+      onSubmit?.(uiPayload)
+    } catch (error) {
+      const message = isAxiosError(error)
+        ? error.response?.data?.message ??
+          error.response?.data?.title ??
+          'Something went wrong. Please try again.'
+        : 'Unexpected error. Please try again.'
+
+      toast.error(message)
+    }
   }
 
   const onFormSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -176,8 +211,9 @@ export function AuthPage({
                     <span className="h-1 flex-1 rounded-full bg-blue-600" />
                     {isFounder && (
                       <span
-                        className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
-                          }`}
+                        className={`h-1 flex-1 rounded-full transition ${
+                          isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
+                        }`}
                       />
                     )}
                   </div>
@@ -191,24 +227,6 @@ export function AuthPage({
               <h2 className="mt-2 text-3xl font-bold tracking-tight">{title}</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">{subtitle}</p>
             </div>
-{/* 
-            {!isOrgStep && (
-              <>
-                <button
-                  type="button"
-                  className="flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-                >
-                  <GitBranch className="size-4" />
-                  Continue with GitHub
-                </button>
-
-                <div className="my-6 flex items-center gap-3 text-xs text-slate-400">
-                  <span className="h-px flex-1 bg-slate-200" />
-                  OR
-                  <span className="h-px flex-1 bg-slate-200" />
-                </div>
-              </>
-            )} */}
 
             <form className="flex flex-col gap-4" onSubmit={onFormSubmit} noValidate>
               {!isOrgStep && (
@@ -263,10 +281,11 @@ export function AuthPage({
                                     field.onChange(option.value)
                                     field.onBlur()
                                   }}
-                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
-                                    ? 'bg-blue-600 text-white'
-                                    : 'hover:bg-blue-500 hover:text-white'
-                                    }`}
+                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white'
+                                      : 'hover:bg-blue-500 hover:text-white'
+                                  }`}
                                 >
                                   {option.label}
                                 </Button>
@@ -279,17 +298,17 @@ export function AuthPage({
                     </div>
                   )}
 
-                  {!isFounder && (
+                  {isEmployee && (
                     <label className="text-sm font-medium text-slate-700">
-                      Organization Name
+                      Organization name
                       <div className="relative mt-2">
-                        <Mail className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                         <input
-                          type="email"
-                          autoComplete="email"
-                          placeholder="you@company.com"
-                          aria-invalid={!!errors.email}
-                          {...register("organizationName")}
+                          type="text"
+                          autoComplete="organization"
+                          placeholder="Acme Inc."
+                          aria-invalid={!!errors.organizationName}
+                          {...register('organizationName')}
                           className={`${INPUT_BASE} pl-10 pr-3.5`}
                         />
                       </div>
@@ -422,18 +441,6 @@ export function AuthPage({
                 </Link>
               </p>
             )}
-
-            {/* <p className="mt-8 text-center text-[11px] leading-5 text-slate-400">
-              By continuing, you agree to TaskFlow&apos;s{' '}
-              <Link to="#" className="underline underline-offset-2">
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link to="#" className="underline underline-offset-2">
-                Privacy Policy
-              </Link>
-              .
-            </p> */}
           </div>
         </section>
       </div>
