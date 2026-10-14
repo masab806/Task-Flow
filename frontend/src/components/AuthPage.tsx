@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
@@ -27,6 +27,7 @@ import { FieldError } from '../lib/helpers'
 import AuthService from '../services/AuthService'
 import toast from 'react-hot-toast'
 import { isAxiosError } from 'axios'
+import { useAuthStore } from '../stores/AuthStore'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
@@ -66,8 +67,11 @@ export function AuthPage({
 }) {
   const [showPassword, setShowPassword] = useState(false)
   const [step, setStep] = useState<SignupStep>('account')
+  const navigate = useNavigate()
 
   const isSignup = mode === 'signup'
+
+  const { login } = useAuthStore()
 
   const {
     register,
@@ -111,11 +115,16 @@ export function AuthPage({
 
     try {
       if (!isSignup) {
-        const result = await AuthService.LoginUser({
+        const result: any = await login({
           email: values.email,
           password: values.password,
         })
-        console.log(result.message)
+        console.log(result)
+        if(result?.success == true){
+          navigate("/dashboard")
+        }
+       
+
         toast.success('Welcome back!')
       } else {
         const result = await AuthService.RegisterUser(toSignupPayload(values))
@@ -127,8 +136,8 @@ export function AuthPage({
     } catch (error) {
       const message = isAxiosError(error)
         ? error.response?.data?.message ??
-          error.response?.data?.title ??
-          'Something went wrong. Please try again.'
+        error.response?.data?.title ??
+        'Something went wrong. Please try again.'
         : 'Unexpected error. Please try again.'
 
       toast.error(message)
@@ -211,9 +220,8 @@ export function AuthPage({
                     <span className="h-1 flex-1 rounded-full bg-blue-600" />
                     {isFounder && (
                       <span
-                        className={`h-1 flex-1 rounded-full transition ${
-                          isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
-                        }`}
+                        className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
+                          }`}
                       />
                     )}
                   </div>
@@ -281,11 +289,10 @@ export function AuthPage({
                                     field.onChange(option.value)
                                     field.onBlur()
                                   }}
-                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${
-                                    isSelected
+                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
                                       ? 'bg-blue-600 text-white'
                                       : 'hover:bg-blue-500 hover:text-white'
-                                  }`}
+                                    }`}
                                 >
                                   {option.label}
                                 </Button>

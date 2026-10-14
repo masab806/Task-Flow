@@ -16,7 +16,7 @@ interface AuthActions {
 
 type AuthStore = AuthState & AuthActions
 
-export const AuthStore = create<AuthStore>((set)=> ({
+export const useAuthStore = create<AuthStore>((set)=> ({
     user: null,
     isAuthenticated: false,
     isLoading: false,
@@ -26,7 +26,10 @@ export const AuthStore = create<AuthStore>((set)=> ({
         set({isLoading: true, error: null});
         try {
             const data = await AuthService.LoginUser(credentals)
-            set({user: data.user, isAuthenticated: true})
+            const {token, ...userProfile} = data
+            console.log(userProfile)
+            set({user: userProfile, isAuthenticated: true})
+            return userProfile
         } catch (error: any) {
             const errorMessage = error.response?.data?.message || "Login Failed";
             set({error: errorMessage})
@@ -36,6 +39,12 @@ export const AuthStore = create<AuthStore>((set)=> ({
     },
 
     logout: async ()=> {
+        set({
+            user: null,
+            isAuthenticated: false,
+            error: null,
+            isLoading: false
+        })
         // Implement Logout
     }
 }))
