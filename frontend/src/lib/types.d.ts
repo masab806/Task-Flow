@@ -31,3 +31,21 @@ export type User = {
   organizationName: string,
 }
 
+
+export interface Task {
+  id: string
+  title: string
+  tag: string
+  tagColor: string
+  due: string
+  priority: string
+  avatar: string
+  avatarColor: string
+}
+
+export interface TaskColumn {
+  id: string
+  title: string
+  color: string
+  tasks: Task[]
+}

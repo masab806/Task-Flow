@@ -2,7 +2,7 @@
 import React, { useState } from 'react'
 import Navbar from '../components/Navbar'
 import Sidebar from '../components/Sidebar'
-import Overview from '../components/Overview'
+import Overview from '../components/Overview/Overview'
 import MyWork from '../components/MyWork'
 import Teams from '../components/Teams'
 import Projects from '../components/Projects'
