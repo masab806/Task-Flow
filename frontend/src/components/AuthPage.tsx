@@ -8,6 +8,7 @@ import {
   Check,
   Eye,
   EyeOff,
+  Loader,
   LockKeyhole,
   Mail,
 } from 'lucide-react'
@@ -71,7 +72,7 @@ export function AuthPage({
 
   const isSignup = mode === 'signup'
 
-  const { login } = useAuthStore()
+  const { login, isLoading } = useAuthStore()
 
   const {
     register,
@@ -119,10 +120,10 @@ export function AuthPage({
           password: values.password,
         })
         console.log(result)
-        if(result?.success == true){
+        if (result?.success == true) {
           navigate("/dashboard")
         }
-       
+
 
         toast.success('Welcome back!')
       } else {
@@ -288,8 +289,8 @@ export function AuthPage({
                                     field.onBlur()
                                   }}
                                   className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
-                                      ? 'bg-blue-600 text-white'
-                                      : 'hover:bg-blue-500 hover:text-white'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'hover:bg-blue-500 hover:text-white'
                                     }`}
                                 >
                                   {option.label}
@@ -429,8 +430,12 @@ export function AuthPage({
                   disabled={isSubmitting}
                   className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 p-1 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {submitLabel}
-                  <ArrowRight className="size-4" />
+                  {!isLoading ? (
+                    <>
+                      {submitLabel}
+                      <ArrowRight className="size-4" />
+                    </>
+                  ) : <Loader className='animate-spin' />}
                 </button>
               </div>
             </form>
