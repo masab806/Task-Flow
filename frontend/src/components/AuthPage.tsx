@@ -4,8 +4,10 @@ import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowLeft,
   ArrowRight,
+  BriefcaseBusiness,
   Building2,
   Check,
+  ChevronDown,
   Eye,
   EyeOff,
   Loader,
@@ -40,7 +42,12 @@ const FEATURES = [
 ]
 
 const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '201–1,000', '1,000+']
-const JOB_ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Operations', 'Other']
+
+// Founder step 2 options
+const FOUNDER_ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Operations', 'Other']
+
+// Employee designation options
+const EMPLOYEE_ROLES = ['Supervisor', 'Engineer', 'Designer', 'Product Manager', 'QA Engineer', 'Other']
 
 const SIGNUP_ROLES = [
   { value: 'founder', label: 'Founder' },
@@ -79,6 +86,7 @@ export function AuthPage({
     control,
     watch,
     reset,
+    setValue,
     trigger,
     handleSubmit,
     formState: { errors, isSubmitting },
@@ -98,6 +106,7 @@ export function AuthPage({
   const isEmployee = isSignup && role === 'employee'
   const isOrgStep = isFounder && step === 'organization'
   const totalSteps = isFounder ? 2 : 1
+  const isBusy = isSubmitting || isLoading
 
   useEffect(() => {
     reset(DEFAULT_VALUES)
@@ -109,9 +118,15 @@ export function AuthPage({
     if (!isFounder) setStep('account')
   }, [isFounder])
 
+  // Founders and employees use different option lists for jobRole,
+  // so clear it when the role changes to avoid a stale, invalid value.
+  useEffect(() => {
+    setValue('jobRole', '')
+  }, [role, setValue])
+
   const onValid = async (values: AuthFormValues) => {
     const uiPayload: AuthFormValues =
-      values.role === 'founder' ? values : { ...values, teamSize: '', jobRole: '' }
+      values.role === 'founder' ? values : { ...values, teamSize: '' }
 
     try {
       if (!isSignup) {
@@ -119,16 +134,13 @@ export function AuthPage({
           email: values.email,
           password: values.password,
         })
-        console.log(result)
-        if (result?.success == true) {
-          navigate("/dashboard")
+
+        if (result?.success) {
+          toast.success('Welcome back!')
+          navigate('/dashboard')
         }
-
-
-        toast.success('Welcome back!')
       } else {
-        const result = await AuthService.RegisterUser(toSignupPayload(values))
-        console.log(result.message)
+        await AuthService.RegisterUser(toSignupPayload(values))
         toast.success('Account created successfully!')
       }
 
@@ -136,8 +148,8 @@ export function AuthPage({
     } catch (error) {
       const message = isAxiosError(error)
         ? error.response?.data?.message ??
-        error.response?.data?.title ??
-        'Something went wrong. Please try again.'
+          error.response?.data?.title ??
+          'Something went wrong. Please try again.'
         : 'Unexpected error. Please try again.'
 
       toast.error(message)
@@ -172,8 +184,7 @@ export function AuthPage({
   return (
     <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
       <div className="grid min-h-screen lg:grid-cols-[1.05fr_0.95fr]">
-        {/* Brand panel */}
-        <section className="hidden overflow-hidden bg-blue-600 p-10 text-white lg:flex lg:flex-col lg:justify-between xl:p-16">
+        <section className="hidden overflow-hidden bg-blue-600 p-10 text-white lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col lg:justify-between lg:self-start xl:p-16">
           <div>
             <Link to="/">
               <Logo variant="light" />
@@ -202,7 +213,6 @@ export function AuthPage({
               </div>
             </div>
           </div>
-
         </section>
 
         {/* Form panel */}
@@ -219,8 +229,9 @@ export function AuthPage({
                     <span className="h-1 flex-1 rounded-full bg-blue-600" />
                     {isFounder && (
                       <span
-                        className={`h-1 flex-1 rounded-full transition ${isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
-                          }`}
+                        className={`h-1 flex-1 rounded-full transition ${
+                          isOrgStep ? 'bg-blue-600' : 'bg-slate-200'
+                        }`}
                       />
                     )}
                   </div>
@@ -288,10 +299,11 @@ export function AuthPage({
                                     field.onChange(option.value)
                                     field.onBlur()
                                   }}
-                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${isSelected
-                                    ? 'bg-blue-600 text-white'
-                                    : 'hover:bg-blue-500 hover:text-white'
-                                    }`}
+                                  className={`cursor-pointer rounded-lg p-2 transition-colors ${
+                                    isSelected
+                                      ? 'bg-blue-600 text-white'
+                                      : 'hover:bg-blue-500 hover:text-white'
+                                  }`}
                                 >
                                   {option.label}
                                 </Button>
@@ -305,21 +317,48 @@ export function AuthPage({
                   )}
 
                   {isEmployee && (
-                    <label className="text-sm font-medium text-slate-700">
-                      Organization name
-                      <div className="relative mt-2">
-                        <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type="text"
-                          autoComplete="organization"
-                          placeholder="Acme Inc."
-                          aria-invalid={!!errors.organizationName}
-                          {...register('organizationName')}
-                          className={`${INPUT_BASE} pl-10 pr-3.5`}
-                        />
-                      </div>
-                      <FieldError message={errors.organizationName?.message} />
-                    </label>
+                    <>
+                      <label className="text-sm font-medium text-slate-700">
+                        Organization name
+                        <div className="relative mt-2">
+                          <Building2 className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                          <input
+                            type="text"
+                            autoComplete="organization"
+                            placeholder="Acme Inc."
+                            aria-invalid={!!errors.organizationName}
+                            {...register('organizationName')}
+                            className={`${INPUT_BASE} pl-10 pr-3.5`}
+                          />
+                        </div>
+                        <FieldError message={errors.organizationName?.message} />
+                      </label>
+
+                      <label className="text-sm font-medium text-slate-700">
+                        Designation
+                        <div className="relative mt-2">
+                          <BriefcaseBusiness className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                          <select
+                            aria-invalid={!!errors.jobRole}
+                            {...register('jobRole')}
+                            className={`${INPUT_BASE} appearance-none bg-white pl-10 pr-10 ${
+                              jobRole ? 'text-slate-900' : 'text-slate-400'
+                            }`}
+                          >
+                            <option value="" disabled>
+                              Select your designation
+                            </option>
+                            {EMPLOYEE_ROLES.map((item) => (
+                              <option key={item} value={item} className="text-slate-900">
+                                {item}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown className="pointer-events-none absolute right-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                        </div>
+                        <FieldError message={errors.jobRole?.message} />
+                      </label>
+                    </>
                   )}
 
                   <label className="text-sm font-medium text-slate-700">
@@ -403,7 +442,7 @@ export function AuthPage({
                       <option value="" disabled>
                         Select your role
                       </option>
-                      {JOB_ROLES.map((item) => (
+                      {FOUNDER_ROLES.map((item) => (
                         <option key={item} value={item} className="text-slate-950">
                           {item}
                         </option>
@@ -427,15 +466,17 @@ export function AuthPage({
                 )}
                 <button
                   type="submit"
-                  disabled={isSubmitting}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 p-1 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                  disabled={isBusy}
+                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                 >
-                  {!isLoading ? (
+                  {isBusy ? (
+                    <Loader className="size-4 animate-spin" />
+                  ) : (
                     <>
                       {submitLabel}
                       <ArrowRight className="size-4" />
                     </>
-                  ) : <Loader className='animate-spin' />}
+                  )}
                 </button>
               </div>
             </form>
