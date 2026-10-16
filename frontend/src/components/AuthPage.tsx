@@ -109,7 +109,6 @@ export function AuthPage({
   }, [isFounder])
 
   const onValid = async (values: AuthFormValues) => {
-    // Only for the UI callback; the API receives the real values below
     const uiPayload: AuthFormValues =
       values.role === 'founder' ? values : { ...values, teamSize: '', jobRole: '' }
 
@@ -203,7 +202,6 @@ export function AuthPage({
             </div>
           </div>
 
-          <p className="text-xs text-blue-200">© 2026 TaskFlow, Inc. All rights reserved.</p>
         </section>
 
         {/* Form panel */}

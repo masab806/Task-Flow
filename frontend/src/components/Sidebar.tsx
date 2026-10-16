@@ -14,9 +14,6 @@ const navItems = [
     { label: 'Teams', icon: Users },
 ]
 
-
-
-
 const Sidebar = ({ activeNav, setActiveNav }: SidebarProps) => {
     return (
         <aside className="sticky top-0 h-screen w-[250px] shrink-0 overflow-y-auto border-r border-slate-200 bg-white p-6">

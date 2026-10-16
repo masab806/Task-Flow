@@ -1,8 +1,14 @@
 import React from 'react'
+import TaskCard from './TaskCard'
 
 const Overview = () => {
   return (
-    <div>Overview</div>
+    <div className='grid grid-cols-3 gap-3'>
+      <TaskCard/>
+      <TaskCard/>
+      <TaskCard/>
+    
+    </div>
   )
 }
 
