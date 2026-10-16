@@ -27,13 +27,8 @@ const Navbar = () => {
     }
 
     return (
-        <section className="min-w-0 flex-1">
+        <section className="min-w-0">
             <header className="flex h-[68px] items-center justify-between border-b border-slate-200 bg-white px-5 sm:px-8">
-                <div className="flex items-center gap-3">
-                    <div className="flex size-8 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold text-white">T
-                    </div>
-                    <span className="font-bold">TaskFlow</span>
-                </div>
                 <div className="relative hidden w-[280px] md:block"><Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                     <input placeholder="Search tasks..." className="h-9 w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-10 text-sm outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100" />
                     <kbd className="absolute right-2 top-1/2 -translate-y-1/2 rounded border border-slate-200 bg-white px-1.5 py-0.5 text-[10px] text-slate-400">⌘ K</kbd>

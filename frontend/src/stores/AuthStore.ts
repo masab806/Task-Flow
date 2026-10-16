@@ -45,6 +45,5 @@ export const useAuthStore = create<AuthStore>((set)=> ({
             error: null,
             isLoading: false
         })
-        // Implement Logout
     }
 }))
