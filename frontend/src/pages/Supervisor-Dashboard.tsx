@@ -1,5 +1,6 @@
 import { Plus, Users } from 'lucide-react'
 import { Button } from '../components/ui/button'
+import Navbar from '../components/Navbar'
 
 const stats = [
   { label: 'Team members', value: '12', note: '+2 this month' },
@@ -137,13 +138,16 @@ function TeamHealth() {
 
 export function SupervisorDashboard() {
   return (
-    <div className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8">
-      <PageHeader />
-      <StatCards />
-      <div className="mt-8 grid gap-4 xl:grid-cols-[1.5fr_1fr]">
-        <TaskTable />
-        <TeamHealth />
+    <>
+      <Navbar />
+      <div className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8">
+        <PageHeader />
+        <StatCards />
+        <div className="mt-8 grid gap-4 xl:grid-cols-[1.5fr_1fr]">
+          <TaskTable />
+          <TeamHealth />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
