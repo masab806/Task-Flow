@@ -1,14 +1,15 @@
 
-import { Dot, Timer } from 'lucide-react'
+import { Dot, MoreHorizontal, Timer } from 'lucide-react'
 import React from 'react'
 
 const TaskCard = () => {
     return (
-        <div className="w-full min-w-0 min-h-[170px] bg-white rounded-lg shadow-md border border-transparent transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:border-blue-500">
-            <div>
+        <div className="group w-full min-w-0 min-h-[170px] bg-white rounded-lg shadow-md border border-transparent transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:border-blue-500">
+            <div className='flex items-center justify-between mr-2'>
                 <p className="text-xs px-4 pt-3 pb-2 font-semibold text-gray-500">
                     TF-104
                 </p>
+                <button onClick={()=> console.log("Working")} className='opacity-0 transition-opacity group-hover:opacity-100'><MoreHorizontal size={15}/></button>
             </div>
 
             <div className="px-4 py-1">
