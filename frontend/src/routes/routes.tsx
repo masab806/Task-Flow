@@ -8,24 +8,24 @@ import ProtectedRoutes from "./ProtectedRoutes";
 const router = createBrowserRouter([
     {
         path: "/",
-        element: <LoginPage/>
+        element: <LoginPage />
     },
     {
         path: "/signin",
-        element: <SignupPage/>
+        element: <SignupPage />
     },
     {
-        element: <ProtectedRoutes/>,
-        children:[
+        element: <ProtectedRoutes />,
+        children: [
             {
                 path: "/dashboard",
-                element: <Dashboard/>
+                element: <Dashboard />
             },
-            {
-                path: "/supervisor",
-                element: <SupervisorDashboard/>
-            }
         ]
+    },
+    {
+        path: "/supervisor",
+        element: <SupervisorDashboard />
     }
 ])
 
