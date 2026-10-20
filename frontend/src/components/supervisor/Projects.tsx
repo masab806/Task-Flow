@@ -1,5 +1,5 @@
 import { CalendarDays, FolderKanban, MoreHorizontal, Search } from 'lucide-react'
-import { Avatar, AvatarStack, Badge, Button, Card, ProgressBar, projects, tones } from './shared'
+import { Avatar, AvatarStack, Badge, Button, Card, ProgressBar, projects, tones } from './Shared'
 
 export function Projects() {
   return (

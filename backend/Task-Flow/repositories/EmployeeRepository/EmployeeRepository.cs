@@ -25,4 +25,14 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return await _dbSet.FirstOrDefaultAsync(e => e.WorkEmail == EmployeeMail);
     }
+
+    public async Task<Employee> GetEmployeeById(int employeeId)
+    {
+        return await _dbSet.FirstOrDefaultAsync(e => e.id == employeeId);
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }

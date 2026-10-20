@@ -1,5 +1,5 @@
 import { Check, Clock3, Plus, Users } from 'lucide-react'
-import { Avatar, Badge, Button, Card, CardHeader, DateInput, Field, Select, TextArea, TextInput, roster } from './shared'
+import { Avatar, Badge, Button, Card, CardHeader, DateInput, Field, Select, TextArea, TextInput, roster } from './Shared'
 
 const projectOptions = ['Website redesign', 'Customer portal', 'Mobile app launch']
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'

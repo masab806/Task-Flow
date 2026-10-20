@@ -33,4 +33,9 @@ public class TaskRepository : ITaskRepository
         await _context.SaveChangesAsync();
         return task;
     }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }

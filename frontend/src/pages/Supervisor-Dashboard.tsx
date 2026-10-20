@@ -25,7 +25,6 @@ export function SupervisorDashboard({ activeTab: initialTab = 'overview' }: { ac
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Supervisor dashboard</h1>
             <p className="mt-1.5 text-sm text-slate-500">Assign work, monitor progress, and keep your team unblocked.</p>
           </div>
-          <Button icon={<Plus className="size-4" />}>Assign task</Button>
         </header>
 
         <section aria-label="Summary statistics" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

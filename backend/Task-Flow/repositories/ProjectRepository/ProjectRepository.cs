@@ -32,4 +32,9 @@ public class ProjectRepository : IProjectRepository
         await _context.SaveChangesAsync();
         return project;
     }
+
+        public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
+    }
 }
