@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import { AssignTaskSchema } from '../../lib/TaskSchema'
 
-const projectOptions = ['Website redesign', 'Customer portal', 'Mobile app launch']
+const projectOptions = [1, 2, 3]
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'
 const hint = 'flex items-center gap-2 text-sm text-slate-500'
 
@@ -23,27 +23,56 @@ export function AssignTask() {
     console.log(data)
   }
 
+  const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
+
   return (
     <Card className="mx-auto max-w-2xl p-6">
       <form onSubmit={handleSubmit(onFormSubmit)} action="">
         <CardHeader title="Assign a new task" description="Give the task an owner and a due date." />
         <div className="mt-6 space-y-5">
           <Field label="Task title">
-            <TextInput {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
+            <input className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'" {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
             {errors.taskTitle && (<p className='text-xs text-red-600'>{errors.taskTitle.message}</p>)}
           </Field>
           <Field label="Description" optional>
-            <TextArea {...register("description")} placeholder="Add context, links, or acceptance criteria…" />
+            <input className='h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20' {...register("description")} placeholder="Add context, links, or acceptance criteria…" />
             {errors.description && (<p className='text-xs text-red-600'>{errors.description.message}</p>)}
           </Field>
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Project">
-              <Select {...register("projectId", { valueAsNumber: true })} options={projectOptions} />
-              {errors.projectId && (<p className='text-xs text-red-600'>{errors.projectId.message}</p>)}
+              <select
+                {...register('projectId')}
+                className={`${control} appearance-none`}
+              >
+                <option value="">Select a project</option>
+                {projectOptions.map((project) => (
+                  <option key={project} value={project}>
+                    {project}
+                  </option>
+                ))}
+              </select>
+              {errors.projectId && (
+                <p className="text-xs text-red-600">{errors.projectId.message}</p>
+              )}
             </Field>
+
             <Field label="Assign to">
-              <Select {...register("employeeId", { valueAsNumber: true })} options={['Jordan Lee', 'Alex Morgan', 'Maya Singh', 'Riley Kim']} />
-              {errors.employeeId && (<p className='text-xs text-red-600'>{errors.employeeId.message}</p>)}
+              <select
+                {...register('employeeId', { valueAsNumber: true })}
+                className={`${control} appearance-none`}
+              >
+                <option value="">Select an employee</option>
+                {[1, 2, 3, 4].map(
+                  (employee, index) => (
+                    <option key={employee} value={index + 1}>
+                      {employee}
+                    </option>
+                  )
+                )}
+              </select>
+              {errors.employeeId && (
+                <p className="text-xs text-red-600">{errors.employeeId.message}</p>
+              )}
             </Field>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
@@ -52,8 +81,18 @@ export function AssignTask() {
               {errors.due_date && (<p className='text-xs text-red-600'>{errors.due_date.message}</p>)}
             </Field>
             <Field label="Priority">
-              <Select options={['Low', 'Medium', 'High']} defaultValue="Medium" />
-              {errors.priority && (<p className='text-xs text-red-600'>{errors.priority.message}</p>)}
+              <select
+                {...register('priority')}
+                defaultValue="Medium"
+                className={`${control} appearance-none`}
+              >
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+              </select>
+              {errors.priority && (
+                <p className="text-xs text-red-600">{errors.priority.message}</p>
+              )}
             </Field>
           </div>
         </div>
