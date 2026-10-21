@@ -1,6 +1,6 @@
 import { Check, Clock3, Plus, Users } from 'lucide-react'
-import { Avatar, Badge, Button, Card, CardHeader, DateInput, Field, Select, TextArea, TextInput, roster, SubmitButton } from './Shared'
-import {useForm} from "react-hook-form"
+import { Avatar, Badge, Button, Card, CardHeader, Field, Select, TextArea, TextInput, roster, SubmitButton } from './Shared'
+import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import type { z } from 'zod'
 import { AssignTaskSchema } from '../../lib/TaskSchema'
@@ -13,39 +13,54 @@ export function AssignTask() {
 
   const {
     register,
-    formState: {errors},
+    formState: { errors },
     handleSubmit
   } = useForm({
     resolver: zodResolver(AssignTaskSchema)
   })
 
-  const onFormSubmit = (data)=> {
+  const onFormSubmit = (data) => {
     console.log(data)
   }
 
   return (
     <Card className="mx-auto max-w-2xl p-6">
       <form onSubmit={handleSubmit(onFormSubmit)} action="">
-      <CardHeader title="Assign a new task" description="Give the task an owner and a due date." />
-      <div className="mt-6 space-y-5">
-        <Field label="Task title">
-          <TextInput {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
-          {errors.taskTitle && (<p className='text-xs text-red-600'>{errors.taskTitle.message}</p>)}
-        </Field>
-        <Field label="Description" optional><TextArea placeholder="Add context, links, or acceptance criteria…" /></Field>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Project"><Select options={projectOptions} /></Field>
-          <Field label="Assign to"><Select options={['Jordan Lee', 'Alex Morgan', 'Maya Singh', 'Riley Kim']} /></Field>
+        <CardHeader title="Assign a new task" description="Give the task an owner and a due date." />
+        <div className="mt-6 space-y-5">
+          <Field label="Task title">
+            <TextInput {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
+            {errors.taskTitle && (<p className='text-xs text-red-600'>{errors.taskTitle.message}</p>)}
+          </Field>
+          <Field label="Description" optional>
+            <TextArea {...register("description")} placeholder="Add context, links, or acceptance criteria…" />
+            {errors.description && (<p className='text-xs text-red-600'>{errors.description.message}</p>)}
+          </Field>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Project">
+              <Select {...register("projectId", { valueAsNumber: true })} options={projectOptions} />
+              {errors.projectId && (<p className='text-xs text-red-600'>{errors.projectId.message}</p>)}
+            </Field>
+            <Field label="Assign to">
+              <Select {...register("employeeId", { valueAsNumber: true })} options={['Jordan Lee', 'Alex Morgan', 'Maya Singh', 'Riley Kim']} />
+              {errors.employeeId && (<p className='text-xs text-red-600'>{errors.employeeId.message}</p>)}
+            </Field>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Field label="Due date">
+              <input type="date" {...register("due_date", { valueAsDate: true })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+              {errors.due_date && (<p className='text-xs text-red-600'>{errors.due_date.message}</p>)}
+            </Field>
+            <Field label="Priority">
+              <Select options={['Low', 'Medium', 'High']} defaultValue="Medium" />
+              {errors.priority && (<p className='text-xs text-red-600'>{errors.priority.message}</p>)}
+            </Field>
+          </div>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <Field label="Due date"><DateInput /></Field>
-          <Field label="Priority"><Select options={['Low', 'Medium', 'High']} defaultValue="Medium" /></Field>
+        <div className={footer}>
+          <span className={hint}><Clock3 aria-hidden className="size-4" /> The task is added to the selected project</span>
+          <SubmitButton icon={<Plus className="size-4" />}>Assign task</SubmitButton>
         </div>
-      </div>
-      <div className={footer}>
-        <span className={hint}><Clock3 aria-hidden className="size-4" /> The task is added to the selected project</span>
-        <SubmitButton icon={<Plus className="size-4" />}>Assign task</SubmitButton>
-      </div>
       </form>
     </Card>
   )
