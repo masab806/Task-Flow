@@ -1,9 +1,9 @@
 import { Check, Clock3, Plus, Users } from 'lucide-react'
-import { Avatar, Badge, Button, Card, CardHeader, Field, Select, TextArea, TextInput, roster, SubmitButton } from './Shared'
+import { Avatar, Badge, Button, Card, CardHeader, Field, Select, roster, SubmitButton } from './Shared'
 import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
-import type { z } from 'zod'
 import { AssignTaskSchema } from '../../lib/TaskSchema'
+import taskService from '../../services/TaskService'
 
 const projectOptions = [1, 2, 3]
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'
@@ -19,8 +19,8 @@ export function AssignTask() {
     resolver: zodResolver(AssignTaskSchema)
   })
 
-  const onFormSubmit = (data) => {
-    console.log(data)
+  const onFormSubmit = async (data) => {
+    await taskService.assignTask(data)
   }
 
   const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'

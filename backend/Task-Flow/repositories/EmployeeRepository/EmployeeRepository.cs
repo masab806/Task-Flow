@@ -31,6 +31,11 @@ public class EmployeeRepository : IEmployeeRepository
         return await _dbSet.FirstOrDefaultAsync(e => e.id == employeeId);
     }
 
+    public async Task<ICollection<Employee>> GetAllEmployees()
+    {
+        return await _dbSet.ToListAsync();
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
