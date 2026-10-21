@@ -6,7 +6,10 @@ using task_flow.data;
 using task_flow.repositories;
 using task_flow.repositories.EmployeeRepository;
 using task_flow.repositories.OrganizationRepository;
+using task_flow.repositories.ProjectRepository;
+using task_flow.repositories.TaskRepository;
 using task_flow.services;
+using task_flow.services.TaskService;
 using task_flow.utils;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,7 +38,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IFounderRepository, FounderRepository>();
 builder.Services.AddScoped<IEmployeeRepository, EmployeeRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 var jwtKey = builder.Configuration["Jwt:secretKey"];
 

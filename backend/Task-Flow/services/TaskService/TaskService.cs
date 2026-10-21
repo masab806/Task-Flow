@@ -6,7 +6,7 @@ using task_flow.repositories.TaskRepository;
 
 namespace task_flow.services.TaskService;
 
-public class TaskService
+public class TaskService : ITaskService
 {
     private readonly ITaskRepository _taskRepository;
     private readonly IProjectRepository _projectRepository;
