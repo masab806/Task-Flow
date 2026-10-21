@@ -24,7 +24,7 @@ import {
   signupSchema,
   toSignupPayload,
   type AuthFormValues,
-} from '../lib/schema'
+} from '../lib/AuthSchema'
 import Logo from './Logo'
 import { FieldError } from '../lib/helpers'
 import AuthService from '../services/AuthService'

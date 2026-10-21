@@ -49,3 +49,12 @@ export interface TaskColumn {
   color: string
   tasks: Task[]
 }
+
+export type AssignTaskType = {
+  taskTitle: string,
+  description: string,
+  projectId: number,
+  employeeId: number,
+  due_date: string,
+  priority: string,
+}

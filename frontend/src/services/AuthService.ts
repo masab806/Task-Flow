@@ -1,8 +1,8 @@
 import api from "../lib/api/api";
-import type { LoginData, SignupData } from "../lib/types";
+import type { LoginData } from "../lib/types";
 
 const AuthService = {
-    RegisterUser: async (data: SignupData) => {
+    RegisterUser: async (data) => {
         const res = await api.post("/api/User/register", data)
 
         const responseData = res.data

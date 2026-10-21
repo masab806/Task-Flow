@@ -16,6 +16,7 @@ namespace task_flow.controllers
             _taskService = taskService;
         }
 
+        [HttpPost("/assign")]
         public async Task<ActionResult> CreateTask([FromBody] TaskCreationDTO dto)
         {
             var result = await _taskService.AssignTask(

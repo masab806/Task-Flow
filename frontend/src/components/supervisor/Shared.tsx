@@ -147,6 +147,17 @@ export function Button({ children, variant = 'primary', icon }: { children: Reac
   )
 }
 
+export function SubmitButton({ children, variant = 'primary', icon }: { children: ReactNode; variant?: 'primary' | 'link'; icon?: ReactNode }) {
+  const style = variant === 'primary'
+    ? 'h-10 rounded-lg px-4 bg-blue-600 text-white shadow-sm hover:bg-blue-700'
+    : 'rounded-md text-blue-600 hover:text-blue-700 hover:underline underline-offset-4'
+  return (
+    <button type="submit" className={`inline-flex items-center justify-center gap-2 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 ${style}`}>
+      {icon}{children}
+    </button>
+  )
+}
+
 /* ---------- form fields ---------- */
 
 const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'

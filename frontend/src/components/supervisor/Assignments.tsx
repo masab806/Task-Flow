@@ -1,16 +1,37 @@
 import { Check, Clock3, Plus, Users } from 'lucide-react'
-import { Avatar, Badge, Button, Card, CardHeader, DateInput, Field, Select, TextArea, TextInput, roster } from './Shared'
+import { Avatar, Badge, Button, Card, CardHeader, DateInput, Field, Select, TextArea, TextInput, roster, SubmitButton } from './Shared'
+import {useForm} from "react-hook-form"
+import { zodResolver } from '@hookform/resolvers/zod'
+import type { z } from 'zod'
+import { AssignTaskSchema } from '../../lib/TaskSchema'
 
 const projectOptions = ['Website redesign', 'Customer portal', 'Mobile app launch']
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'
 const hint = 'flex items-center gap-2 text-sm text-slate-500'
 
 export function AssignTask() {
+
+  const {
+    register,
+    formState: {errors},
+    handleSubmit
+  } = useForm({
+    resolver: zodResolver(AssignTaskSchema)
+  })
+
+  const onFormSubmit = (data)=> {
+    console.log(data)
+  }
+
   return (
     <Card className="mx-auto max-w-2xl p-6">
+      <form onSubmit={handleSubmit(onFormSubmit)} action="">
       <CardHeader title="Assign a new task" description="Give the task an owner and a due date." />
       <div className="mt-6 space-y-5">
-        <Field label="Task title"><TextInput placeholder="e.g. Review mobile onboarding flow" /></Field>
+        <Field label="Task title">
+          <TextInput {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
+          {errors.taskTitle && (<p className='text-xs text-red-600'>{errors.taskTitle.message}</p>)}
+        </Field>
         <Field label="Description" optional><TextArea placeholder="Add context, links, or acceptance criteria…" /></Field>
         <div className="grid gap-5 sm:grid-cols-2">
           <Field label="Project"><Select options={projectOptions} /></Field>
@@ -23,8 +44,9 @@ export function AssignTask() {
       </div>
       <div className={footer}>
         <span className={hint}><Clock3 aria-hidden className="size-4" /> The task is added to the selected project</span>
-        <Button icon={<Plus className="size-4" />}>Assign task</Button>
+        <SubmitButton icon={<Plus className="size-4" />}>Assign task</SubmitButton>
       </div>
+      </form>
     </Card>
   )
 }
