@@ -47,9 +47,23 @@ public class TaskService
         };
 
         await _taskRepository.CreateTask(TaskItem);
+        await _taskRepository.SaveChangesAsync();
 
         return TaskItem;
 
     }
 
+    public async Task<bool> DeleteTask(int TaskItemId)
+    {
+        var task = await _taskRepository.GetTaskById(TaskItemId);
+
+        if(task == null)
+        {
+            throw new InvalidOperationException("No Task Found.");
+        }
+
+        var deleted = await _taskRepository.DeleteTaskById(TaskItemId);
+
+        return deleted;
+    }
 }

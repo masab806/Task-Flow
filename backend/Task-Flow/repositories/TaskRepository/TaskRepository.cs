@@ -34,6 +34,24 @@ public class TaskRepository : ITaskRepository
         return task;
     }
 
+    public async Task<TaskItem> GetTaskById(int TaskItemId)
+    {
+        return await _dbSet.FirstOrDefaultAsync(t => t.TaskItemId == TaskItemId);
+    }
+
+    public async Task<bool> DeleteTaskById(int TaskItemId)
+    {
+        var taskItem = await _dbSet.FindAsync(TaskItemId);
+
+        if(taskItem != null)
+        {
+            _dbSet.Remove(taskItem);
+            return true;
+        };
+
+        return false;
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
