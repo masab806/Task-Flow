@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using task_flow.dto;
 using task_flow.models;
 using task_flow.repositories;
@@ -114,18 +115,21 @@ public class AuthService : IAuthService
         };
 
         var organization = await _organizationRepository.GetOrganizationByName(OrganizationName);
+
         
         if(organization == null)
         {
             throw new InvalidOperationException("Organization Not Found");
         };
 
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
+
         var newEmployee = new Employee
         {
           FullName = FullName,
           WorkEmail = WorkEmail,
           CompanyRole = CompanyRole,
-          Password = BCrypt.Net.BCrypt.HashPassword(Password),
+          Password = hashedPassword,
           Role = string.IsNullOrWhiteSpace(Role) ? "Employee" : Role,
           Organization = organization,
         };
@@ -208,6 +212,7 @@ public class AuthService : IAuthService
                 WorkEmail = employee.WorkEmail,
                 Message = "Login Successful",
                 Role = "Employee",
+                CompanyRole = employee.CompanyRole,
                 Success = true,
                 Token = token.Token,
             };
