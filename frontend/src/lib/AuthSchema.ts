@@ -71,6 +71,7 @@ export type EmployeeSignupPayload = {
   password: string
   organizationName: string
   role: 'employee'
+  companyRole: string
 }
 
 export type SignupPayload = FounderSignupPayload | EmployeeSignupPayload
@@ -92,4 +93,5 @@ export const toSignupPayload = (v: AuthFormValues): SignupPayload =>
         password: v.password,
         organizationName: v.organizationName,
         role: 'employee',
+        companyRole: v.jobRole ?? '',
       }

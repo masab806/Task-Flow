@@ -8,5 +8,6 @@ public class EmployeeRegistrationDTO
     public string WorkEmail {get; set;} = string.Empty;
     public string Role {get; set;} = string.Empty;
     public string OrganizationName {get; set;} = string.Empty;
+    public string CompanyRole {get; set;} = string.Empty;
     public string Password {get; set;} = string.Empty;
 }

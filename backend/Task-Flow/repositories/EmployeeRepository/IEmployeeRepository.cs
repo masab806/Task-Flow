@@ -9,5 +9,6 @@ public interface IEmployeeRepository
     Task<bool?> EmployeeExistsByMail(string employeeMail);
     Task<Employee> GetEmployeeByEmail(string employeeMail);
     Task<Employee> GetEmployeeById(int employeeId);
+    Task<Employee> CreateEmployee(Employee employee);
     Task SaveChangesAsync();
 }

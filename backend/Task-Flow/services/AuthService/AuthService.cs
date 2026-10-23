@@ -106,6 +106,54 @@ public class AuthService : IAuthService
         };
     }
 
+    public async Task<EmployeeResponseDTO> RegisterEmployee(string FullName, string WorkEmail, string Role, string OrganizationName, string CompanyRole, string Password)
+    {
+        if(string.IsNullOrWhiteSpace(FullName) || string.IsNullOrEmpty(WorkEmail) || string.IsNullOrWhiteSpace(Role) || string.IsNullOrWhiteSpace(OrganizationName) || string.IsNullOrWhiteSpace(CompanyRole) || string.IsNullOrWhiteSpace(Password))
+        {
+            throw new InvalidDataException("Invalid Fields!");
+        };
+
+        var organization = await _organizationRepository.GetOrganizationByName(OrganizationName);
+        
+        if(organization == null)
+        {
+            throw new InvalidOperationException("Organization Not Found");
+        };
+
+        var newEmployee = new Employee
+        {
+          FullName = FullName,
+          WorkEmail = WorkEmail,
+          CompanyRole = CompanyRole,
+          Password = BCrypt.Net.BCrypt.HashPassword(Password),
+          Role = string.IsNullOrWhiteSpace(Role) ? "Employee" : Role,
+          Organization = organization,
+        };
+
+        await _employeeRepository.CreateEmployee(newEmployee);
+        await _employeeRepository.SaveChangesAsync();
+
+        if(newEmployee.id == 0)
+        {
+            return new EmployeeResponseDTO
+            {
+                EmployeeId = 0,
+                WorkEmail = "",
+                FullName = ""   
+            };
+        }
+
+
+        return new EmployeeResponseDTO
+        {
+            EmployeeId = newEmployee.id,
+            FullName = FullName,
+            WorkEmail = WorkEmail,
+            CompanyRole = CompanyRole,
+            OrganizationName = organization.OrganizationName,
+        };
+    }
+
     public async Task<UserResponseDTO> LoginUser(string WorkEmail, string Password)
     {
         if(string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(Password))

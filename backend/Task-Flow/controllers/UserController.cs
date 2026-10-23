@@ -38,6 +38,26 @@ namespace task_flow.controllers
             return Ok(result);
         }
 
+        [HttpPost("registerEmployee")]
+        public async Task<ActionResult> RegisterEmployee([FromBody] EmployeeRegistrationDTO dto)
+        {
+            var result = await _authService.RegisterEmployee(
+                dto.FullName,
+                dto.WorkEmail,
+                dto.Role,
+                dto.OrganizationName,
+                dto.CompanyRole,
+                dto.Password
+            );
+
+            if(result.EmployeeId == 0)
+            {
+                return BadRequest(result);
+            };
+
+            return Ok(result);
+        }
+
         [HttpPost("login")]
         public async Task<ActionResult> LoginUser(
             [FromBody] UserLoginDTO dto)

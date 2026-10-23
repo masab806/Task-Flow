@@ -35,6 +35,13 @@ public class EmployeeRepository : IEmployeeRepository
     {
         return await _dbSet.ToListAsync();
     }
+    
+    public async Task<Employee> CreateEmployee(Employee employee)
+    {
+        var entry = await _dbSet.AddAsync(employee);
+        return entry.Entity;
+
+    }
 
     public async Task SaveChangesAsync()
     {
