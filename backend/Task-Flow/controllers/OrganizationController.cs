@@ -16,6 +16,7 @@ namespace task_flow.controllers
             _organizationService = organizationService;
         }
 
+        [HttpGet("getAllOrganizations")]
         public async Task<ActionResult<IEnumerable<Organization>>> GetAllOrganizations()
         {
             var result = await _organizationService.GetAllOrganizations();
