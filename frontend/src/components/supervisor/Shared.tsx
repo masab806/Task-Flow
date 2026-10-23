@@ -173,7 +173,19 @@ export function Field({ label, optional = false, children }: { label: string; op
   )
 }
 
-export const TextInput = ({ placeholder }: { placeholder?: string }) => <input placeholder={placeholder} className={control} />
+export const TextInput = ({
+  placeholder,
+  type = 'text',
+  defaultValue,
+  min,
+  max,
+}: {
+  placeholder?: string
+  type?: 'text' | 'number'
+  defaultValue?: string | number
+  min?: number
+  max?: number
+}) => <input type={type} placeholder={placeholder} defaultValue={defaultValue} min={min} max={max} className={control} />
 
 export const TextArea = ({ placeholder }: { placeholder?: string }) => (
   <textarea rows={3} placeholder={placeholder} className={`${control} h-auto resize-none py-2.5`} />
@@ -192,7 +204,7 @@ export function Select({ options, defaultValue }: { options: string[]; defaultVa
 
 export const DateInput = () => (
   <span className="relative block">
-    <input type="text" placeholder="Select a date" className={`${control} pr-9`} />
+    <input type="date" className={`${control} pr-9`} />
     <CalendarDays aria-hidden className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
   </span>
 )

@@ -4,13 +4,35 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AssignTaskSchema } from '../../lib/TaskSchema'
 import taskService from '../../services/TaskService'
+import { useState, useEffect } from 'react'
+import EmployeeService from '../../services/EmployeeService'
+import ProjectService from '../../services/ProjectService'
 
 const projectOptions = [1, 2, 3]
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'
 const hint = 'flex items-center gap-2 text-sm text-slate-500'
 
 export function AssignTask() {
+  const [employees, setEmployees] = useState([])
+  const [projects, setProjects] = useState([])
 
+  useEffect(() => {
+    const getAllEmployees = async ()=> {
+      const result = await EmployeeService.getAllEmployees();
+
+      setEmployees(result)
+    }
+
+    const getAllProjects = async ()=> {
+      const result = await ProjectService.getAllProjects();
+
+      setProjects(result);
+    }
+
+    getAllEmployees();
+    getAllProjects();
+  }, [])
+  
   const {
     register,
     formState: { errors },
@@ -18,6 +40,7 @@ export function AssignTask() {
   } = useForm({
     resolver: zodResolver(AssignTaskSchema)
   })
+
 
   const onFormSubmit = async (data) => {
     await taskService.assignTask(data)
@@ -45,8 +68,8 @@ export function AssignTask() {
                 className={`${control} appearance-none`}
               >
                 <option value="">Select a project</option>
-                {projectOptions.map((project) => (
-                  <option key={project} value={project}>
+                {Array.isArray(projects) && projects.map((project: any) => (
+                  <option key={project?.id} value={project?.id}>
                     {project}
                   </option>
                 ))}
@@ -62,10 +85,10 @@ export function AssignTask() {
                 className={`${control} appearance-none`}
               >
                 <option value="">Select an employee</option>
-                {[1, 2, 3, 4].map(
-                  (employee, index) => (
-                    <option key={employee} value={index + 1}>
-                      {employee}
+                {Array.isArray(employees) && employees.map(
+                  (employee: any) => (
+                    <option key={employee?.id} value={employee?.id}>
+                      {employee?.fullName}
                     </option>
                   )
                 )}

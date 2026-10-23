@@ -17,4 +17,9 @@ public class ProjectService : IProjectService
     {
         return await _projectRepository.GetAllProjects();
     }
+
+    public async Task<Project> CreateProject(Project project)
+    {
+        if(project.)
+    }
 }

@@ -137,11 +137,24 @@ namespace task_flow.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ProjectProgress")
+                    b.Property<string>("Description")
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("Due_date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("ProjectLeadId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ProjectProgress")
+                        .HasColumnType("integer");
+
                     b.Property<string>("ProjectTitle")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -158,8 +171,19 @@ namespace task_flow.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("TaskItemId"));
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Due_date")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<bool>("IsCompleted")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("ProjectId")
                         .HasColumnType("integer");
