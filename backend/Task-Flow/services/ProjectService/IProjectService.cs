@@ -6,5 +6,10 @@ namespace task_flow.services.ProjectService;
 public interface IProjectService
 {
     public Task<IEnumerable<Project>> GetAllProjects();
-    public Task<Project> CreateProject(Project project);
+    public Task<Project> CreateProject(
+    string projectTitle,
+    string description,
+    int projectLeadId,
+    string status,
+    DateTime due_date);
 }
