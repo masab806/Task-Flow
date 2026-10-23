@@ -118,8 +118,7 @@ export function AuthPage({
     if (!isFounder) setStep('account')
   }, [isFounder])
 
-  // Founders and employees use different option lists for jobRole,
-  // so clear it when the role changes to avoid a stale, invalid value.
+
   useEffect(() => {
     setValue('jobRole', '')
   }, [role, setValue])
@@ -135,13 +134,21 @@ export function AuthPage({
           password: values.password,
         })
 
-        if (result?.success) {
+        console.log(result)
+
+        if (result?.success && result?.role === "Employee" && result?.companyRole === "Supervisor") {
           toast.success('Welcome back!')
+          navigate('/supervisor')
+        } else if(result?.success && result?.role === "Employee"){
+          toast.success('Welcome Back')
           navigate('/dashboard')
+        } else {
+          navigate('/')
         }
       } else {
         await AuthService.RegisterUser(toSignupPayload(values))
         toast.success('Account created successfully!')
+        navigate('/')
       }
 
       onSubmit?.(uiPayload)
