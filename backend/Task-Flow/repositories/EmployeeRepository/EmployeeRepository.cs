@@ -23,17 +23,23 @@ public class EmployeeRepository : IEmployeeRepository
 
     public async Task<Employee> GetEmployeeByEmail(string EmployeeMail)
     {
-        return await _dbSet.FirstOrDefaultAsync(e => e.WorkEmail == EmployeeMail);
+        return await _dbSet
+            .Include(e => e.Organization)
+            .FirstOrDefaultAsync(e => e.WorkEmail == EmployeeMail);
     }
 
     public async Task<Employee> GetEmployeeById(int employeeId)
     {
-        return await _dbSet.FirstOrDefaultAsync(e => e.id == employeeId);
+        return await _dbSet
+            .Include(e => e.Organization)
+            .FirstOrDefaultAsync(e => e.id == employeeId);
     }
 
     public async Task<ICollection<Employee>> GetAllEmployees()
     {
-        return await _dbSet.ToListAsync();
+        return await _dbSet
+            .Include(e => e.Organization)
+            .ToListAsync();
     }
     
     public async Task<Employee> CreateEmployee(Employee employee)

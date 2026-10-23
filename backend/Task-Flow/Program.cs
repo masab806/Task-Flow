@@ -10,6 +10,7 @@ using task_flow.repositories.ProjectRepository;
 using task_flow.repositories.TaskRepository;
 using task_flow.services;
 using task_flow.services.EmployeeService;
+using task_flow.services.ProjectService;
 using task_flow.services.TaskService;
 using task_flow.utils;
 
@@ -44,6 +45,7 @@ builder.Services.AddScoped<IProjectRepository, ProjectRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IProjectService, ProjectService>();
 
 var jwtKey = builder.Configuration["Jwt:secretKey"];
 
