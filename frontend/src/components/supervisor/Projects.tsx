@@ -1,19 +1,31 @@
 import { useState, useEffect } from 'react'
 import { CalendarDays, FolderKanban, MoreHorizontal, Plus, Search, X } from 'lucide-react'
-import { Avatar, AvatarStack, Badge, Button, Card, DateInput, Field, ProgressBar, Select, TextArea, TextInput, tones } from './Shared'
+import { Avatar, AvatarStack, Badge, Button, Card, Field, people, ProgressBar, projects as sampleProjects, tones, type Tone } from './Shared'
 import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ProjectCreationSchema } from '../../lib/ProjectSchema'
 import ProjectService from '../../services/ProjectService'
 import EmployeeService from '../../services/EmployeeService'
 import type { ProjectCreationType, ProjectCreationInput } from '../../lib/ProjectSchema'
+import type { Employee, Project } from '../../lib/types'
 import toast from 'react-hot-toast'
+
+const projectTones: Record<string, Tone> = {
+  planning: 'violet',
+  'in progress': 'blue',
+  'on hold': 'amber',
+  completed: 'green',
+}
+
+const placeholderMembers = [people.alex, people.jordan, people.maya]
+
+const getProjectTone = (status: string): Tone => projectTones[status.toLowerCase()] ?? 'slate'
 
 
 export function Projects() {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
-  const [projects, setProjects] = useState([])
-  const [employees, setEmployees] = useState([])
+  const [projects, setProjects] = useState<Project[]>([])
+  const [employees, setEmployees] = useState<Employee[]>([])
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -31,10 +43,6 @@ export function Projects() {
     fetchEmployees();
     fetchProjects();
   }, []);
-
-
-  console.log(projects)
-
 
   const {
     register,
@@ -79,50 +87,57 @@ export function Projects() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {projects.map((p) => (
-            <Card key={p?.code} className="flex flex-col p-5">
-              <div className="flex items-start justify-between">
-                <span className={`flex size-10 items-center justify-center rounded-lg ${tones[p?.tone].avatar}`}>
-                  <FolderKanban aria-hidden className="size-5" />
-                </span>
-                <button
-                  type="button"
-                  aria-label={`More options for ${p?.name}`}
-                  className="-mr-1.5 -mt-1.5 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                >
-                  <MoreHorizontal className="size-5" />
-                </button>
-              </div>
+          {projects.map((p) => {
+            const tone = getProjectTone(p.status)
+            const taskCount = p.projectTasks?.length ?? 0
+            const dueDate = p.due_date
+              ? new Date(p.due_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+              : 'No due date'
 
-              <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                <h3 className="text-base font-semibold text-slate-900">{p?.name}</h3>
-                <Badge tone={p?.tone} dot>{p?.status}</Badge>
-              </div>
-              <p className="mt-0.5 text-xs text-slate-500">{p?.code}</p>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{p?.description}</p>
-
-              <div className="mt-5">
-                <div className="mb-2 flex items-baseline justify-between text-sm">
-                  <span className="text-slate-500">{p?.tasks}</span>
-                  <span className="font-semibold tabular-nums text-slate-900">{p?.progress}%</span>
-                </div>
-                <ProgressBar value={p?.progress} tone={p?.tone} label={`${p?.name} progress`} />
-              </div>
-
-              <div className="mt-auto pt-5">
-                <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-                  <div className="flex items-center gap-2.5">
-                    <AvatarStack members={p?.members} />
-                    <span className="text-xs text-slate-500">{p?.members.length} members</span>
-                  </div>
-                  <span className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <CalendarDays aria-hidden className="size-3.5" /> {p?.due}
+            return (
+              <Card key={p.projectId} className="flex flex-col p-5">
+                <div className="flex items-start justify-between">
+                  <span className={`flex size-10 items-center justify-center rounded-lg ${tones[tone].avatar}`}>
+                    <FolderKanban aria-hidden className="size-5" />
                   </span>
+                  <button
+                    type="button"
+                    aria-label={`More options for ${p.projectTitle}`}
+                    className="-mr-1.5 -mt-1.5 rounded-lg p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    <MoreHorizontal className="size-5" />
+                  </button>
                 </div>
-                <div className="mt-3"><Button variant="link">View project</Button></div>
-              </div>
-            </Card>
-          ))}
+
+                <div className="mt-4 flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  <h3 className="text-base font-semibold text-slate-900">{p.projectTitle}</h3>
+                  <Badge tone={tone} dot>{p.status}</Badge>
+                </div>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{p.description}</p>
+
+                <div className="mt-5">
+                  <div className="mb-2 flex items-baseline justify-between text-sm">
+                    <span className="text-slate-500">{taskCount} tasks</span>
+                    <span className="font-semibold tabular-nums text-slate-900">{p.projectProgress}%</span>
+                  </div>
+                  <ProgressBar value={p.projectProgress} tone={tone} label={`${p.projectTitle} progress`} />
+                </div>
+
+                <div className="mt-auto pt-5">
+                  <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                    <div className="flex items-center gap-2.5">
+                      <AvatarStack members={placeholderMembers} />
+                      <span className="text-xs text-slate-500">{placeholderMembers.length} members</span>
+                    </div>
+                    <span className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <CalendarDays aria-hidden className="size-3.5" /> {dueDate}
+                    </span>
+                  </div>
+                  <div className="mt-3"><Button variant="link">View project</Button></div>
+                </div>
+              </Card>
+            )
+          })}
         </div>
       </div>
 
@@ -265,7 +280,7 @@ export function ProjectTeams() {
       </div>
 
       <div className="divide-y divide-slate-100">
-        {projects.map((p) => (
+        {sampleProjects.map((p) => (
           <section key={p.code} className="p-5">
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">

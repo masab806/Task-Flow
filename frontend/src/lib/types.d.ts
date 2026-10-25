@@ -31,6 +31,20 @@ export type User = {
   organizationName: string,
 }
 
+export type Project = {
+  projectId: number
+  projectTitle: string
+  description: string
+  projectProgress: number
+  status: string
+  projectTasks?: unknown[]
+  due_date: string
+}
+
+export type Employee = {
+  id: number
+  fullName: string
+}
 
 export interface Task {
   id: string
@@ -58,4 +72,3 @@ export type AssignTaskType = {
   due_date: string,
   priority: string,
 }
-
