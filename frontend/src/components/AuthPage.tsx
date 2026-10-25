@@ -27,10 +27,10 @@ import {
 } from '../lib/AuthSchema'
 import Logo from './Logo'
 import { FieldError } from '../lib/helpers'
-import AuthService from '../services/AuthService'
 import toast from 'react-hot-toast'
 import { isAxiosError } from 'axios'
 import { useAuthStore } from '../stores/AuthStore'
+import { useLoginUser, useRegisterUser } from '../lib/hooks/useAuth'
 
 type AuthMode = 'login' | 'signup'
 type SignupStep = 'account' | 'organization'
@@ -79,7 +79,9 @@ export function AuthPage({
 
   const isSignup = mode === 'signup'
 
-  const { login, isLoading } = useAuthStore()
+  const setSession = useAuthStore((state) => state.setSession)
+  const loginMutation = useLoginUser()
+  const registerMutation = useRegisterUser()
 
   const {
     register,
@@ -106,7 +108,7 @@ export function AuthPage({
   const isEmployee = isSignup && role === 'employee'
   const isOrgStep = isFounder && step === 'organization'
   const totalSteps = isFounder ? 2 : 1
-  const isBusy = isSubmitting || isLoading
+  const isBusy = isSubmitting || loginMutation.isPending || registerMutation.isPending
 
   useEffect(() => {
     reset(DEFAULT_VALUES)
@@ -129,12 +131,11 @@ export function AuthPage({
 
     try {
       if (!isSignup) {
-        const result: any = await login({
+        const result = await loginMutation.mutateAsync({
           email: values.email,
           password: values.password,
         })
-
-        console.log(result)
+        setSession(result)
 
         if (result?.success && result?.role === "Employee" && result?.companyRole === "Supervisor") {
           toast.success('Welcome back!')
@@ -146,7 +147,7 @@ export function AuthPage({
           navigate('/')
         }
       } else {
-        await AuthService.RegisterUser(toSignupPayload(values))
+        await registerMutation.mutateAsync(toSignupPayload(values))
         toast.success('Account created successfully!')
         navigate('/')
       }

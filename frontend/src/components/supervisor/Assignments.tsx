@@ -1,52 +1,44 @@
 import { Check, Clock3, Plus, Users } from 'lucide-react'
-import { Avatar, Badge, Button, Card, CardHeader, Field, Select, roster, SubmitButton } from './Shared'
+import { useState } from 'react'
+import { Badge, Button, Card, CardHeader, Field, SubmitButton } from './Shared'
 import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { AssignTaskSchema } from '../../lib/TaskSchema'
-import taskService from '../../services/TaskService'
-import { useState, useEffect } from 'react'
-import EmployeeService from '../../services/EmployeeService'
-import ProjectService from '../../services/ProjectService'
+import type { AssignTaskType } from '../../lib/types'
+import type { z } from 'zod'
+import toast from 'react-hot-toast'
+import { useProjects } from '../../lib/hooks/useProjects'
+import { useEmployees } from '../../lib/hooks/useEmployees'
+import { useAssignTask } from '../../lib/hooks/useTasks'
 
-const projectOptions = [1, 2, 3]
 const footer = 'mt-6 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:items-center sm:justify-between'
 const hint = 'flex items-center gap-2 text-sm text-slate-500'
+const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
 
 export function AssignTask() {
-  const [employees, setEmployees] = useState([])
-  const [projects, setProjects] = useState([])
+  const { data: projects = [], isLoading: isLoadingProjects, isError: projectsError } = useProjects()
+  const { data: employees = [], isLoading: isLoadingEmployees, isError: employeesError } = useEmployees()
+  const assignTask = useAssignTask()
 
-  useEffect(() => {
-    const getAllEmployees = async ()=> {
-      const result = await EmployeeService.getAllEmployees();
-
-      setEmployees(result)
-    }
-
-    const getAllProjects = async ()=> {
-      const result = await ProjectService.getAllProjects();
-
-      setProjects(result);
-    }
-
-    getAllEmployees();
-    getAllProjects();
-  }, [])
-  
   const {
     register,
     formState: { errors },
     handleSubmit
-  } = useForm({
+  } = useForm<z.input<typeof AssignTaskSchema>, unknown, z.output<typeof AssignTaskSchema>>({
     resolver: zodResolver(AssignTaskSchema)
   })
 
-
-  const onFormSubmit = async (data) => {
-    await taskService.assignTask(data)
+  const onFormSubmit = async (data: z.output<typeof AssignTaskSchema>) => {
+    try {
+      await assignTask.mutateAsync({
+        ...data,
+        due_date: data.due_date.toISOString(),
+      } satisfies AssignTaskType)
+      toast.success('Task assigned')
+    } catch {
+      toast.error('Unable to assign task')
+    }
   }
-
-  const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
 
   return (
     <Card className="mx-auto max-w-2xl p-6">
@@ -54,7 +46,7 @@ export function AssignTask() {
         <CardHeader title="Assign a new task" description="Give the task an owner and a due date." />
         <div className="mt-6 space-y-5">
           <Field label="Task title">
-            <input className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'" {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
+            <input className={`${control}`} {...register("taskTitle")} placeholder="e.g. Review mobile onboarding flow" />
             {errors.taskTitle && (<p className='text-xs text-red-600'>{errors.taskTitle.message}</p>)}
           </Field>
           <Field label="Description" optional>
@@ -64,13 +56,15 @@ export function AssignTask() {
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Project">
               <select
-                {...register('projectId')}
+                {...register('projectId', { valueAsNumber: true })}
                 className={`${control} appearance-none`}
               >
-                <option value="">Select a project</option>
-                {Array.isArray(projects) && projects.map((project: any) => (
-                  <option key={project?.id} value={project?.id}>
-                    {project}
+                <option value="" disabled>
+                  {isLoadingProjects ? 'Loading projects...' : projectsError ? 'Unable to load projects' : 'Select a project'}
+                </option>
+                {projects.map((project) => (
+                  <option key={project.projectId} value={project.projectId}>
+                    {project.projectTitle}
                   </option>
                 ))}
               </select>
@@ -84,14 +78,14 @@ export function AssignTask() {
                 {...register('employeeId', { valueAsNumber: true })}
                 className={`${control} appearance-none`}
               >
-                <option value="">Select an employee</option>
-                {Array.isArray(employees) && employees.map(
-                  (employee: any) => (
-                    <option key={employee?.id} value={employee?.id}>
-                      {employee?.fullName}
-                    </option>
-                  )
-                )}
+                <option value="" disabled>
+                  {isLoadingEmployees ? 'Loading employees...' : employeesError ? 'Unable to load employees' : 'Select an employee'}
+                </option>
+                {employees.map((employee) => (
+                  <option key={employee.id} value={employee.id}>
+                    {employee.fullName}
+                  </option>
+                ))}
               </select>
               {errors.employeeId && (
                 <p className="text-xs text-red-600">{errors.employeeId.message}</p>
@@ -129,29 +123,70 @@ export function AssignTask() {
 }
 
 export function AssignEmployees() {
+  const { data: projects = [], isLoading: isLoadingProjects, isError: projectsError } = useProjects()
+  const { data: employees = [], isLoading: isLoadingEmployees, isError: employeesError } = useEmployees()
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([])
+
   return (
     <Card className="mx-auto max-w-2xl p-6">
       <CardHeader title="Assign employees to project" description="Choose who should join this project." />
-      <div className="mt-6"><Field label="Project"><Select options={projectOptions} /></Field></div>
+      <div className="mt-6">
+        <Field label="Project">
+          <select className={`${control} appearance-none`} defaultValue="" disabled={isLoadingProjects}>
+            <option value="" disabled>
+              {isLoadingProjects ? 'Loading projects...' : projectsError ? 'Unable to load projects' : 'Select a project'}
+            </option>
+            {projects.map((project) => (
+              <option key={project.projectId} value={project.projectId}>{project.projectTitle}</option>
+            ))}
+          </select>
+        </Field>
+      </div>
 
       <div className="mt-6 flex items-center justify-between">
         <p className="text-sm font-medium text-slate-900">Available employees</p>
-        <Badge>4 available</Badge>
+        <Badge>{isLoadingEmployees ? 'Loading...' : `${employees.length} available`}</Badge>
       </div>
 
       <ul className="mt-3 space-y-2">
-        {roster.map(({ person, role, email, tasks }, i) => {
-          const selected = i === 0
+        {isLoadingEmployees && <li className="text-sm text-slate-500">Loading employees...</li>}
+        {employeesError && <li className="text-sm text-red-600">Unable to load employees.</li>}
+        {!isLoadingEmployees && !employeesError && employees.length === 0 && (
+          <li className="text-sm text-slate-500">No employees available.</li>
+        )}
+        {employees.map((employee) => {
+          const selected = selectedEmployeeIds.includes(employee.id)
+          const initials = employee.fullName
+            .split(/\s+/)
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((part) => part[0].toUpperCase())
+            .join('')
+
           return (
-            <li key={person.name}>
+            <li key={employee.id}>
               <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${selected ? 'border-blue-500 bg-blue-50/60' : 'border-slate-200 hover:bg-slate-50'}`}>
-                <input type="checkbox" defaultChecked={selected} className="size-4 rounded accent-blue-600" />
-                <Avatar person={person} />
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-slate-900">{person.name}</span>
-                  <span className="block truncate text-xs text-slate-500">{role} · {email}</span>
+                <input
+                  type="checkbox"
+                  checked={selected}
+                  onChange={(event) => {
+                    setSelectedEmployeeIds((current) =>
+                      event.target.checked
+                        ? [...current, employee.id]
+                        : current.filter((id) => id !== employee.id)
+                    )
+                  }}
+                  className="size-4 rounded accent-blue-600"
+                />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                  {initials}
                 </span>
-                <span className="hidden shrink-0 text-xs text-slate-500 sm:inline">{tasks}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium text-slate-900">{employee.fullName}</span>
+                  <span className="block truncate text-xs text-slate-500">
+                    {[employee.companyRole, employee.workEmail].filter(Boolean).join(' · ')}
+                  </span>
+                </span>
               </label>
             </li>
           )
@@ -159,7 +194,7 @@ export function AssignEmployees() {
       </ul>
 
       <div className={footer}>
-        <span className={hint}><Users aria-hidden className="size-4" /> 1 employee selected</span>
+        <span className={hint}><Users aria-hidden className="size-4" /> {selectedEmployeeIds.length} employees selected</span>
         <Button icon={<Check className="size-4" />}>Add to project</Button>
       </div>
     </Card>

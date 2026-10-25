@@ -1,13 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { CalendarDays, FolderKanban, MoreHorizontal, Plus, Search, X } from 'lucide-react'
 import { Avatar, AvatarStack, Badge, Button, Card, Field, people, ProgressBar, projects as sampleProjects, tones, type Tone } from './Shared'
 import { useForm } from "react-hook-form"
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ProjectCreationSchema } from '../../lib/ProjectSchema'
-import ProjectService from '../../services/ProjectService'
-import EmployeeService from '../../services/EmployeeService'
 import type { ProjectCreationType, ProjectCreationInput } from '../../lib/ProjectSchema'
-import type { Employee, Project } from '../../lib/types'
+import { useCreateProject, useProjects } from '../../lib/hooks/useProjects'
+import { useEmployees } from '../../lib/hooks/useEmployees'
 import toast from 'react-hot-toast'
 
 const projectTones: Record<string, Tone> = {
@@ -24,25 +23,9 @@ const getProjectTone = (status: string): Tone => projectTones[status.toLowerCase
 
 export function Projects() {
   const [isCreateProjectOpen, setIsCreateProjectOpen] = useState(false)
-  const [projects, setProjects] = useState<Project[]>([])
-  const [employees, setEmployees] = useState<Employee[]>([])
-
-  useEffect(() => {
-    const fetchProjects = async () => {
-      const result = await ProjectService.getAllProjects();
-
-      setProjects(result)
-    }
-
-    const fetchEmployees = async () => {
-      const result = await EmployeeService.getAllEmployees();
-
-      setEmployees(result)
-    }
-
-    fetchEmployees();
-    fetchProjects();
-  }, []);
+  const { data: projects = [], isLoading: isLoadingProjects, error: projectsError } = useProjects()
+  const { data: employees = [] } = useEmployees()
+  const createProject = useCreateProject()
 
   const {
     register,
@@ -58,10 +41,13 @@ export function Projects() {
 
 
   const onFormSubmit = async (data: ProjectCreationType) => {
-    console.log(data)
-    await ProjectService.createProject(data);
-    toast.success("Project Created")
-    setIsCreateProjectOpen(false)
+    try {
+      await createProject.mutateAsync(data)
+      toast.success("Project Created")
+      setIsCreateProjectOpen(false)
+    } catch {
+      toast.error("Unable to create project")
+    }
   }
 
   const control = 'h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 transition-colors focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
@@ -87,6 +73,8 @@ export function Projects() {
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          {isLoadingProjects && <p className="text-sm text-slate-500">Loading projects...</p>}
+          {projectsError && <p className="text-sm text-red-600">Unable to load projects.</p>}
           {projects.map((p) => {
             const tone = getProjectTone(p.status)
             const taskCount = p.projectTasks?.length ?? 0
@@ -219,13 +207,11 @@ export function Projects() {
                       className={`${control} appearance-none`}
                     >
                       <option value="">Select an employee</option>
-                      {Array.isArray(employees) && employees.map(
-                        (employee: any) => (
-                          <option key={employee?.id} value={employee?.id}>
-                            {employee?.fullName}
-                          </option>
-                        )
-                      )}
+                      {employees.map((employee) => (
+                        <option key={employee.id} value={employee.id}>
+                          {employee.fullName}
+                        </option>
+                      ))}
                     </select>
                     {errors.ProjectLeadId && (
                       <p className="text-xs text-red-600">{errors.ProjectLeadId.message}</p>

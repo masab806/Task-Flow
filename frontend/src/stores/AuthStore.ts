@@ -1,6 +1,5 @@
 import {create} from "zustand"
-import AuthService from "../services/AuthService"
-import type { LoginData, User } from "../lib/types"
+import type { LoginResponse, User } from "../lib/types"
 
 interface AuthState {
     user: User | null;
@@ -10,7 +9,7 @@ interface AuthState {
 }
 
 interface AuthActions {
-    login: (credentials: LoginData) => Promise<void>
+    setSession: (response: LoginResponse) => void
     logout: ()=> void
 }
 
@@ -22,20 +21,16 @@ export const useAuthStore = create<AuthStore>((set)=> ({
     isLoading: false,
     error: null,
 
-    login: async (credentals: LoginData)=> {
-        set({isLoading: true, error: null});
-        try {
-            const data = await AuthService.LoginUser(credentals)
-            const {token, ...userProfile} = data
-            console.log(userProfile)
-            set({user: userProfile, isAuthenticated: true})
-            return userProfile
-        } catch (error: any) {
-            const errorMessage = error.response?.data?.message || "Login Failed";
-            set({error: errorMessage})
-        } finally {
-            set({isLoading: false})
+    setSession: (response: LoginResponse) => {
+        const user: User = {
+            id: String(response.userId),
+            email: response.workEmail,
+            name: response.fullName,
+            fullName: response.fullName,
+            role: response.role,
+            companyRole: response.companyRole,
         }
+        set({user, isAuthenticated: response.success, error: null})
     },
 
     logout: async ()=> {

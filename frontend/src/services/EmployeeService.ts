@@ -1,12 +1,10 @@
 import api from "../lib/api/api";
+import type { Employee } from "../lib/types";
 
 const EmployeeService = {
-    getAllEmployees: async ()=> {
-        const res = await api.get("/api/Employee/GetAll")
-
-        const responseData = res.data
-
-        return responseData ?? [];
+    getAllEmployees: async (): Promise<Employee[]> => {
+        const res = await api.get<Employee[]>("/api/Employee/GetAll")
+        return res.data ?? [];
     }
 }
 

@@ -27,8 +27,21 @@ export type User = {
   id: string,
   email: string,
   name?: string,
+  fullName?: string,
   role?: string,
-  organizationName: string,
+  companyRole?: string,
+  organizationName?: string,
+}
+
+export type LoginResponse = {
+  userId: number
+  workEmail: string
+  fullName: string
+  role: string
+  companyRole?: string
+  success: boolean
+  token: string
+  message: string
 }
 
 export type Project = {
@@ -44,6 +57,8 @@ export type Project = {
 export type Employee = {
   id: number
   fullName: string
+  workEmail?: string
+  companyRole?: string
 }
 
 export interface Task {
