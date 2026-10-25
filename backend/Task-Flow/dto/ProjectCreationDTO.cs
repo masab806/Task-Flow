@@ -8,6 +8,7 @@ public class ProjectCreationDTO
     public string Description {get; set;} = string.Empty;
     public int ProjectLeadId {get; set;} = 0;
     public string Status {get; set;} = string.Empty;
+    public int ProjectProgress {get; set;} = 0;
     public DateTime Due_Date {get; set;}
 
 }

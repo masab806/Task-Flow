@@ -1,5 +1,5 @@
 import api from "../lib/api/api";
-import type { ProjectCreationType } from "../lib/types";
+import type { ProjectCreationType } from "../lib/ProjectSchema";
 
 const ProjectService = {
     getAllProjects: async ()=> {

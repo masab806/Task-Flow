@@ -59,10 +59,3 @@ export type AssignTaskType = {
   priority: string,
 }
 
-export type ProjectCreationType = {
-  projectTitle: string,
-  description: string,
-  ProjectLeadId: number,
-  Status: string,
-  Due_Date: string
-}
