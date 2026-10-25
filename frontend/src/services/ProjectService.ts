@@ -1,4 +1,5 @@
 import api from "../lib/api/api";
+import type { ProjectCreationType } from "../lib/types";
 
 const ProjectService = {
     getAllProjects: async ()=> {
@@ -7,6 +8,14 @@ const ProjectService = {
         const responseData = res.data
 
         return responseData ?? [];
+    },
+
+    createProject: async (data: ProjectCreationType)=> {
+        const res = await api.post("/api/Project/create", data)
+        
+        const responseData = res.data
+
+        return responseData;
     }
 }
 

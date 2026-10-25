@@ -58,3 +58,11 @@ export type AssignTaskType = {
   due_date: string,
   priority: string,
 }
+
+export type ProjectCreationType = {
+  projectTitle: string,
+  description: string,
+  ProjectLeadId: number,
+  Status: string,
+  Due_Date: string
+}
