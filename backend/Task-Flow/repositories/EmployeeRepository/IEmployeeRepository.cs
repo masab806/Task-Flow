@@ -10,5 +10,6 @@ public interface IEmployeeRepository
     Task<Employee> GetEmployeeByEmail(string employeeMail);
     Task<Employee> GetEmployeeById(int employeeId);
     Task<Employee> CreateEmployee(Employee employee);
+    Task<ICollection<Employee>> FetchEmployeeByIds(int[] employeeIds);
     Task SaveChangesAsync();
 }

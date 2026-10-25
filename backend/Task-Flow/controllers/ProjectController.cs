@@ -43,5 +43,13 @@ namespace task_flow.controllers
 
             return Ok(result);
         }
+
+        [HttpPost("assign")]
+        public async Task<ActionResult<Employee>> Assign([FromBody] int projectId, int[] employeeIds)
+        {
+            var result = await _projectService.AssignEmployees(projectId, `employeeIds);
+
+            return Ok(result);
+        }
     }
 }

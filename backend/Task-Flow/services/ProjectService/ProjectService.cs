@@ -67,4 +67,35 @@ public class ProjectService : IProjectService
         return project;
     }
 
+    public async Task<ICollection<Employee>> AssignEmployees(int projectId, int[] employeeIds)
+    {
+        if(employeeIds == null || employeeIds.Length == 0)
+        {
+            throw new InvalidDataException("No Employees.");
+        };
+
+        var allEmployees = await _employeeRepository.FetchEmployeeByIds(employeeIds);
+
+        if(allEmployees == null || allEmployees.Count == 0)
+        {
+            throw new InvalidDataException("Employees Not Found!");
+        };
+
+        var project = await _projectRepository.GetProjectById(projectId);
+
+        if (project == null)
+        {
+            throw new InvalidDataException("Project Not Found!");
+        }
+
+        foreach (var employee in allEmployees)
+        {
+            project.assignedEmployees.Add(employee);
+        }
+
+        await _projectRepository.SaveChangesAsync();
+
+        return project.assignedEmployees;
+    }
+
 }

@@ -49,6 +49,12 @@ public class EmployeeRepository : IEmployeeRepository
 
     }
 
+    public async Task<ICollection<Employee>> FetchEmployeeByIds(int[] employeeIds)
+    {
+        var employees = await _dbSet.Where(e => employeeIds.Contains(e.id)).ToListAsync();
+        return employees;
+    }
+
     public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();

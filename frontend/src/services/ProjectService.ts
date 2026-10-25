@@ -11,6 +11,11 @@ const ProjectService = {
     createProject: async (data: ProjectCreationType): Promise<Project> => {
         const res = await api.post<Project>("/api/Project/create", data)
         return res.data;
+    },
+
+    assignEmployee: async (employeeIds: number[]) => {
+        const res = await api.post("/api/Project/assign", employeeIds);
+        return res.data
     }
 }
 

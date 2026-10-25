@@ -21,9 +21,12 @@ public class ProjectRepository : IProjectRepository
         return await _dbSet.AsNoTracking().ToListAsync();
     }
 
-    public async Task<IEnumerable<Project>> GetProjectById(int projectId)
+    public async Task<Project?> GetProjectById(int projectId)
     {
-        return await _dbSet.Where(p => p.ProjectId == projectId).ToListAsync();
+        return await _dbSet
+            .Include(p => p.assignedEmployees)
+            .Where(p => p.ProjectId == projectId)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<Project> CreateProject(Project project)
@@ -33,7 +36,7 @@ public class ProjectRepository : IProjectRepository
         return project;
     }
 
-        public async Task SaveChangesAsync()
+    public async Task SaveChangesAsync()
     {
         await _context.SaveChangesAsync();
     }

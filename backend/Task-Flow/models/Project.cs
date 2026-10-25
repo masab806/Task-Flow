@@ -12,5 +12,6 @@ public class Project
     public ICollection<TaskItem> ProjectTasks {get; set;} = new List<TaskItem>();
     public DateTime Due_date {get; set;}
     public int ProjectLeadId {get; set;}
+    public ICollection<Employee> assignedEmployees {get; set;}
     public DateTimeOffset CreatedAt {get; set;} = DateTime.UtcNow;
 }

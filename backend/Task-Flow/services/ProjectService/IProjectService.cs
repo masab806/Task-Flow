@@ -12,4 +12,5 @@ public interface IProjectService
     int projectLeadId,
     string status,
     DateTime due_date);
+    public Task<ICollection<Employee>> AssignEmployees(int projectId, int[] employeeIds);
 }
