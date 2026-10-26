@@ -45,9 +45,12 @@ namespace task_flow.controllers
         }
 
         [HttpPost("assign")]
-        public async Task<ActionResult<Employee>> Assign([FromBody] int projectId, int[] employeeIds)
+        public async Task<ActionResult<Employee>> Assign([FromBody] AssignEmployeesDTO dto)
         {
-            var result = await _projectService.AssignEmployees(projectId, `employeeIds);
+            var result = await _projectService.AssignEmployees(
+                projectId: dto.ProjectId,
+                employeeIds: dto.EmployeeIds
+            );
 
             return Ok(result);
         }

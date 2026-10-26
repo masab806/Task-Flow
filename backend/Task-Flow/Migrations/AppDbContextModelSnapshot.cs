@@ -45,6 +45,9 @@ namespace task_flow.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("ProjectId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("text");
@@ -56,6 +59,8 @@ namespace task_flow.Migrations
                     b.HasKey("id");
 
                     b.HasIndex("Organizationid");
+
+                    b.HasIndex("ProjectId");
 
                     b.ToTable("Employees");
                 });
@@ -213,6 +218,10 @@ namespace task_flow.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("task_flow.models.Project", null)
+                        .WithMany("assignedEmployees")
+                        .HasForeignKey("ProjectId");
+
                     b.Navigation("Organization");
                 });
 
@@ -230,6 +239,8 @@ namespace task_flow.Migrations
             modelBuilder.Entity("task_flow.models.Project", b =>
                 {
                     b.Navigation("ProjectTasks");
+
+                    b.Navigation("assignedEmployees");
                 });
 #pragma warning restore 612, 618
         }

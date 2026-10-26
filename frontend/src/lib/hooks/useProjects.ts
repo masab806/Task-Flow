@@ -24,13 +24,19 @@ export function useCreateProject() {
   })
 }
 
-export function assignEmployees(){
+export function assignEmployees() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (employeeIds: number[]) => ProjectService.assignEmployee(employeeIds),
-    onSuccess: async ()=> {
-      await queryClient.invalidateQueries({queryKey: projectKeys.all})
+    mutationFn: (data: {
+      projectId: number;
+      employeeIds: number[];
+    }) => ProjectService.assignEmployee(data),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: projectKeys.all,
+      });
     },
-  })
+  });
 }

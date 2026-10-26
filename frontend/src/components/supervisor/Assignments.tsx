@@ -7,7 +7,7 @@ import { AssignTaskSchema } from '../../lib/TaskSchema'
 import type { AssignTaskType } from '../../lib/types'
 import type { z } from 'zod'
 import toast from 'react-hot-toast'
-import { useProjects } from '../../lib/hooks/useProjects'
+import { assignEmployees, useProjects } from '../../lib/hooks/useProjects'
 import { useEmployees } from '../../lib/hooks/useEmployees'
 import { useAssignTask } from '../../lib/hooks/useTasks'
 
@@ -122,81 +122,197 @@ export function AssignTask() {
   )
 }
 
+
+
 export function AssignEmployees() {
-  const { data: projects = [], isLoading: isLoadingProjects, isError: projectsError } = useProjects()
-  const { data: employees = [], isLoading: isLoadingEmployees, isError: employeesError } = useEmployees()
-  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([])
+  const {
+    data: projects = [],
+    isLoading: isLoadingProjects,
+    isError: projectsError,
+  } = useProjects();
+
+  const {
+    data: employees = [],
+    isLoading: isLoadingEmployees,
+    isError: employeesError,
+  } = useEmployees();
+
+  const [selectedProjectId, setSelectedProjectId] = useState<number | "">("");
+  const [selectedEmployeeIds, setSelectedEmployeeIds] = useState<number[]>([]);
+
+  const { mutate, isPending, error, isSuccess } = assignEmployees();
+
+  const handleAssign = () => {
+    if (selectedProjectId === "" || selectedEmployeeIds.length === 0) {
+      return;
+    }
+
+    mutate({
+      projectId: selectedProjectId,
+      employeeIds: selectedEmployeeIds,
+    });
+  };
 
   return (
     <Card className="mx-auto max-w-2xl p-6">
-      <CardHeader title="Assign employees to project" description="Choose who should join this project." />
+      <CardHeader
+        title="Assign employees to project"
+        description="Choose who should join this project."
+      />
+
       <div className="mt-6">
         <Field label="Project">
-          <select className={`${control} appearance-none`} defaultValue="" disabled={isLoadingProjects}>
-            <option value="" disabled>
-              {isLoadingProjects ? 'Loading projects...' : projectsError ? 'Unable to load projects' : 'Select a project'}
+          <select
+            className={`${control} appearance-none`}
+            value={selectedProjectId}
+            disabled={isLoadingProjects || projectsError}
+            onChange={(event) => {
+              setSelectedProjectId(
+                event.target.value === ""
+                  ? ""
+                  : Number(event.target.value)
+              );
+            }}
+          >
+            <option value="">
+              {isLoadingProjects
+                ? "Loading projects..."
+                : projectsError
+                  ? "Unable to load projects"
+                  : "Select a project"}
             </option>
+
             {projects.map((project) => (
-              <option key={project.projectId} value={project.projectId}>{project.projectTitle}</option>
+              <option
+                key={project.projectId}
+                value={project.projectId}
+              >
+                {project.projectTitle}
+              </option>
             ))}
           </select>
         </Field>
       </div>
 
       <div className="mt-6 flex items-center justify-between">
-        <p className="text-sm font-medium text-slate-900">Available employees</p>
-        <Badge>{isLoadingEmployees ? 'Loading...' : `${employees.length} available`}</Badge>
+        <p className="text-sm font-medium text-slate-900">
+          Available employees
+        </p>
+
+        <Badge>
+          {isLoadingEmployees
+            ? "Loading..."
+            : `${employees.length} available`}
+        </Badge>
       </div>
 
       <ul className="mt-3 space-y-2">
-        {isLoadingEmployees && <li className="text-sm text-slate-500">Loading employees...</li>}
-        {employeesError && <li className="text-sm text-red-600">Unable to load employees.</li>}
-        {!isLoadingEmployees && !employeesError && employees.length === 0 && (
-          <li className="text-sm text-slate-500">No employees available.</li>
+        {isLoadingEmployees && (
+          <li className="text-sm text-slate-500">
+            Loading employees...
+          </li>
         )}
-        {employees.map((employee) => {
-          const selected = selectedEmployeeIds.includes(employee.id)
-          const initials = employee.fullName
-            .split(/\s+/)
-            .filter(Boolean)
-            .slice(0, 2)
-            .map((part) => part[0].toUpperCase())
-            .join('')
 
-          return (
-            <li key={employee.id}>
-              <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${selected ? 'border-blue-500 bg-blue-50/60' : 'border-slate-200 hover:bg-slate-50'}`}>
-                <input
-                  type="checkbox"
-                  checked={selected}
-                  onChange={(event) => {
-                    setSelectedEmployeeIds((current) =>
-                      event.target.checked
-                        ? [...current, employee.id]
-                        : current.filter((id) => id !== employee.id)
-                    )
-                  }}
-                  className="size-4 rounded accent-blue-600"
-                />
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
-                  {initials}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium text-slate-900">{employee.fullName}</span>
-                  <span className="block truncate text-xs text-slate-500">
-                    {[employee.companyRole, employee.workEmail].filter(Boolean).join(' · ')}
-                  </span>
-                </span>
-              </label>
+        {employeesError && (
+          <li className="text-sm text-red-600">
+            Unable to load employees.
+          </li>
+        )}
+
+        {!isLoadingEmployees &&
+          !employeesError &&
+          employees.length === 0 && (
+            <li className="text-sm text-slate-500">
+              No employees available.
             </li>
-          )
-        })}
+          )}
+
+        {!isLoadingEmployees &&
+          !employeesError &&
+          employees.map((employee) => {
+            const selected = selectedEmployeeIds.includes(employee.id);
+
+            const initials = employee.fullName
+              .split(/\s+/)
+              .filter(Boolean)
+              .slice(0, 2)
+              .map((part) => part[0].toUpperCase())
+              .join("");
+
+            return (
+              <li key={employee.id}>
+                <label
+                  className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                    selected
+                      ? "border-blue-500 bg-blue-50/60"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={(event) => {
+                      setSelectedEmployeeIds((current) =>
+                        event.target.checked
+                          ? [...current, employee.id]
+                          : current.filter((id) => id !== employee.id)
+                      );
+                    }}
+                    className="size-4 rounded accent-blue-600"
+                  />
+
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-semibold text-blue-700">
+                    {initials}
+                  </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium text-slate-900">
+                      {employee.fullName}
+                    </span>
+
+                    <span className="block truncate text-xs text-slate-500">
+                      {[employee.companyRole, employee.workEmail]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            );
+          })}
       </ul>
 
       <div className={footer}>
-        <span className={hint}><Users aria-hidden className="size-4" /> {selectedEmployeeIds.length} employees selected</span>
-        <Button icon={<Check className="size-4" />}>Add to project</Button>
+        <span className={hint}>
+          <Users aria-hidden className="size-4" />
+          {selectedEmployeeIds.length} employees selected
+        </span>
+
+        <button
+          type="button"
+          onClick={handleAssign}
+          disabled={
+            isPending ||
+            selectedProjectId === "" ||
+            selectedEmployeeIds.length === 0
+          }
+          className="bg-blue-500 hover:opacity-80 p-2 cursor-pointer font-poppins rounded-md font-semibold text-white text-sm disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isPending ? "Assigning..." : "Add to project"}
+        </button>
       </div>
+
+      {isSuccess && (
+        <p className="mt-3 text-sm text-green-600">
+          Employees assigned successfully.
+        </p>
+      )}
+
+      {error && (
+        <p className="mt-3 text-sm text-red-600">
+          {error.message || "Failed to assign employees."}
+        </p>
+      )}
     </Card>
-  )
+  );
 }
