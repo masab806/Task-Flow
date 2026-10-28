@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using StackExchange.Redis;
 using task_flow.dto;
 using task_flow.models;
 using task_flow.repositories;
@@ -15,13 +16,15 @@ public class AuthService : IAuthService
     private readonly IOrganizationRepository _organizationRepository;
     private readonly IEmployeeRepository _employeeRepository;
     private readonly JwtUtil _jwtUtil;
+    private readonly IDatabase _redis;
 
-    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, JwtUtil jwtUtil)
+    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, JwtUtil jwtUtil, IConnectionMultiplexer redis)
     {
         _founderRepository = founderRepository;
         _organizationRepository = organizationRepository;
         _employeeRepository = employeeRepository;
         _jwtUtil = jwtUtil;
+        _redis = redis.GetDatabase();
     }
 
     public async Task<FounderResponse> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string TeamSize, string CompanyDesignation)
