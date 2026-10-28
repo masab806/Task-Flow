@@ -43,10 +43,8 @@ const FEATURES = [
 
 const TEAM_SIZES = ['Just me', '2–10', '11–50', '51–200', '201–1,000', '1,000+']
 
-// Founder step 2 options
 const FOUNDER_ROLES = ['Founder / Executive', 'Engineering', 'Product', 'Design', 'Operations', 'Other']
 
-// Employee designation options
 const EMPLOYEE_ROLES = ['Supervisor', 'Engineer', 'Designer', 'Product Manager', 'QA Engineer', 'Other']
 
 const SIGNUP_ROLES = [
@@ -396,7 +394,7 @@ export function AuthPage({
                   {!isSignup && (
                     <div className="-mt-1 flex justify-end">
                       <Link
-                        to="#"
+                        to="/forgot"
                         className="text-xs font-semibold text-blue-600 hover:text-blue-700"
                       >
                         Forgot password?
@@ -475,7 +473,7 @@ export function AuthPage({
                 <button
                   type="submit"
                   disabled={isBusy}
-                  className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
+                  className="flex h-11 p-2 cursor-pointer flex-1 items-center justify-center gap-2 rounded-lg bg-blue-600 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:opacity-60"
                 >
                   {isBusy ? (
                     <Loader className="size-4 animate-spin" />
