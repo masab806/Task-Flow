@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Text.Json;
 using StackExchange.Redis;
@@ -29,8 +30,6 @@ public class AuthService : IAuthService
         _redis = redis.GetDatabase();
     }
 
-    // OTP Helper Functions
-
     public async Task<string> GenerateOTP(string WorkEmail)
     {
         var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
@@ -54,7 +53,7 @@ public class AuthService : IAuthService
 
 
         string JsonString = JsonSerializer.Serialize(CachedPayload);
-        await _redis.StringSetAsync(otpKey, otpCode, TimeSpan.FromMinutes(2));
+        await _redis.StringSetAsync(otpKey, JsonString, TimeSpan.FromMinutes(2));
 
         return otpCode;
     }
@@ -289,8 +288,34 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<ResetPasswordDTO> ResetPassword(string WorkEmail, string otp, string Password)
+    public async Task<string> ResetPassword(string WorkEmail, string otp, string Password)
     {
-        return null
+        var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+        var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
+
+        if(employee == null && founder == null)
+        {
+            throw new InvalidDataException("User Not Found!");
+        }
+
+        bool OTPVerified = await VerifyOTP(employee?.id ?? founder!.id, otp);
+
+        if(!OTPVerified)
+        {
+            throw new InvalidCredentialException("OTP Not Verified");
+        };
+
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password, 10);
+
+        if (employee != null)
+        {
+            employee.Password = hashedPassword;
+        }
+        else
+        {
+            founder!.Password = hashedPassword;
+        }
+
+        return "Password Updated";
     }
 }
