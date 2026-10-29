@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text.Json;
 using StackExchange.Redis;
 using task_flow.dto;
 using task_flow.models;
@@ -30,7 +31,7 @@ public class AuthService : IAuthService
 
     // OTP Helper Functions
 
-    public async Task<string> GetOTP(string WorkEmail)
+    public async Task<string> GenerateOTP(string WorkEmail)
     {
         var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
         var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
@@ -40,12 +41,22 @@ public class AuthService : IAuthService
             throw new InvalidDataException("User Not Found!");
         }
 
-        var otp = RandomNumberGenerator.GetInt32(0, 10000).ToString();
+        var otpCode = RandomNumberGenerator.GetInt32(0, 10000).ToString();
         var otpKey = employee != null ? $"otp:{employee.id}" : $"otp:{founder?.id}";
 
-        await _redis.StringSetAsync(otpKey, otp, TimeSpan.FromMinutes(2));
+        var userId = employee?.id ?? founder?.id;
+        
+        var CachedPayload = new
+        {
+            Otp = otpCode,
+            UserId = userId
+        };
 
-        return otp;
+
+        string JsonString = JsonSerializer.Serialize(CachedPayload);
+        await _redis.StringSetAsync(otpKey, otpCode, TimeSpan.FromMinutes(2));
+
+        return otpCode;
     }
 
     public async Task<bool> VerifyOTP(int userId, string otp)
@@ -280,7 +291,6 @@ public class AuthService : IAuthService
 
     public async Task<ResetPasswordDTO> ResetPassword(string WorkEmail, string otp, string Password)
     {
-        
         return null
     }
 }
