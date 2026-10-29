@@ -277,4 +277,10 @@ public class AuthService : IAuthService
             Token = ""
         };
     }
+
+    public async Task<ResetPasswordDTO> ResetPassword(string WorkEmail, string otp, string Password)
+    {
+        
+        return null
+    }
 }
