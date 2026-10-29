@@ -69,6 +69,7 @@ public class AuthService : IAuthService
             throw new InvalidDataException("Invalid OTP!");
         }
 
+        await _redis.KeyDeleteAsync(otpKey);
         return true;
     }
 
