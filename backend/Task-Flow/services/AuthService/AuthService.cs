@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using StackExchange.Redis;
 using task_flow.dto;
 using task_flow.models;
@@ -25,6 +26,50 @@ public class AuthService : IAuthService
         _employeeRepository = employeeRepository;
         _jwtUtil = jwtUtil;
         _redis = redis.GetDatabase();
+    }
+
+    // OTP Helper Functions
+
+    public async Task<string> GetOTP(string WorkEmail)
+    {
+        var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+        var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
+
+        if(employee == null && founder == null)
+        {
+            throw new InvalidDataException("User Not Found!");
+        }
+
+        var otp = RandomNumberGenerator.GetInt32(0, 10000).ToString();
+        var otpKey = employee != null ? $"otp:{employee.id}" : $"otp:{founder?.id}";
+
+        await _redis.StringSetAsync(otpKey, otp, TimeSpan.FromMinutes(2));
+
+        return otp;
+    }
+
+    public async Task<bool> VerifyOTP(int userId, string otp)
+    {
+        var otpKey = $"otp:{userId}";
+
+        if(otpKey == "")
+        {
+            throw new InvalidDataException("OTP Not Found!");
+        }
+
+        var StoredOtp = await _redis.StringGetAsync(otpKey);
+
+        if(otp == "")
+        {
+            throw new InvalidDataException("OTP Not Found!");
+        }
+
+        if(StoredOtp != otp)
+        {
+            throw new InvalidDataException("Invalid OTP!");
+        }
+
+        return true;
     }
 
     public async Task<FounderResponse> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string TeamSize, string CompanyDesignation)
