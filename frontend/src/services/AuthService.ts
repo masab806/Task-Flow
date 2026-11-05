@@ -15,7 +15,7 @@ const AuthService = {
         return res.data;
     },
 
-    GenerateOTP: async (data: {email: string})=> {
+    GenerateOTP: async (data)=> {
         const res = await api.post("/api/User/otp", data)
         return res.data;
     },

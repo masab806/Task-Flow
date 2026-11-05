@@ -1,83 +1,88 @@
-
 import { Link, useNavigate } from "react-router-dom"
 import Logo from "../components/Logo"
 import { ArrowLeft, ArrowRight, Check, Eye, EyeClosed, Mail } from "lucide-react"
 import { useState } from "react"
-import { Button } from "../components/supervisor/Shared"
 import AuthService from "../services/AuthService"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ResetPasswordSchema } from "../lib/ResetSchema"
 import toast from "react-hot-toast"
 
+type Step = "Email-Step" | "OTP-Step" | "Reset-Password"
+
+const FEATURES = [
+    "One clear view of every project",
+    "Fast, focused workflows for your team",
+    "Built for momentum, not busywork",
+]
+
+const INPUT_BASE =
+    "h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 aria-invalid:border-red-400 aria-invalid:focus:ring-red-100"
+
 export default function ForgotPassword() {
-    const [step, setStep] = useState<"Email-Step" | "OTP-Step" | "Reset-Password">("Reset-Password")
+    const [step, setStep] = useState<Step>("Email-Step")
     const [otp, setOtp] = useState(["", "", "", ""])
-    const [showPassword, setShowPassword] = useState<boolean>(false)
-    const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false)
-
-    const FEATURES = [
-        "One clear view of every project",
-        "Fast, focused workflows for your team",
-        "Built for momentum, not busywork",
-    ]
-
-    const INPUT_BASE =
-        "h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 aria-invalid:border-red-400 aria-invalid:focus:ring-red-100"
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     const {
         register,
         handleSubmit,
         formState: { errors },
         watch,
-        trigger
+        trigger,
+        setValue,
     } = useForm({
-        resolver: zodResolver(ResetPasswordSchema)
+        resolver: zodResolver(ResetPasswordSchema),
     })
 
     const workEmail = watch("email")
-
     const navigate = useNavigate()
 
+    const handleFormSubmit = async () => {
+        if (loading) return
 
-    const handleFormSubmit = async ()=> {
         try {
-            if (step === "Email-Step"){
-                const isValid = trigger("email")
+            setLoading(true)
 
-                if(!isValid) return
+            if (step === "Email-Step") {
+                const isValid = await trigger("email")
+                if (!isValid) return
 
-                await AuthService.GenerateOTP({email: workEmail})
-
+                await AuthService.GenerateOTP(workEmail)
                 setStep("OTP-Step")
-            }
+            } else if (step === "OTP-Step") {
+                const enteredOtp = otp.join("")
+                if (enteredOtp.length !== 4) return
 
-            else if (step === "OTP-Step"){
-                const enteredOtp = otp.join('')
-
-                if(enteredOtp.length !== 4) return
-
+                // Give react-hook-form the combined OTP (the 4 boxes are not registered)
+                setValue("otp", enteredOtp, { shouldValidate: true })
                 setStep("Reset-Password")
-            }
-
-            else if (step === "Reset-Password"){
-                await handleSubmit(async (data)=> {
+            } else if (step === "Reset-Password") {
+                // handleSubmit returns a function, so it must be invoked with ()
+                await handleSubmit(async (data) => {
                     await AuthService.ResetPassword(data)
                     toast.success("Password Set")
                     navigate("/")
-                })
+                })()
             }
         } catch (error) {
             console.log("Error", error)
+        } finally {
+            setLoading(false)
         }
     }
 
     const handleOtpChange = (value: string, index: number) => {
         if (!/^\d?$/.test(value)) return
 
-        const updatedOtp = [...otp]
-        updatedOtp[index] = value
-        setOtp(updatedOtp)
+        // Functional update so rapid changes never overwrite each other
+        setOtp((prev) => {
+            const updated = [...prev]
+            updated[index] = value
+            return updated
+        })
 
         if (value && index < 3) {
             document.getElementById(`otp-${index + 1}`)?.focus()
@@ -93,6 +98,17 @@ export default function ForgotPassword() {
         }
     }
 
+    const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+        const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4)
+        if (!pasted) return
+
+        e.preventDefault()
+        const updated = ["", "", "", ""]
+        pasted.split("").forEach((digit, i) => (updated[i] = digit))
+        setOtp(updated)
+
+        document.getElementById(`otp-${Math.min(pasted.length, 3)}`)?.focus()
+    }
 
     return (
         <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
@@ -136,11 +152,8 @@ export default function ForgotPassword() {
                             <ArrowLeft />
                         </Link>
 
-                        <p className="font-poppins text-2xl font-semibold">
-                            Reset Password
-                        </p>
+                        <p className="font-poppins text-2xl font-semibold">Reset Password</p>
                     </div>
-
 
                     <section className="flex min-h-[calc(100vh-80px)] w-full flex-col items-center justify-center px-5">
                         {step === "Email-Step" && (
@@ -155,7 +168,7 @@ export default function ForgotPassword() {
                                     </h1>
 
                                     <p className="text-sm leading-6 text-slate-500">
-                                        Tell us a bit about your team so we can get your workspace ready.
+                                        Enter your work email and we&apos;ll send you a 4-digit code.
                                     </p>
                                 </div>
 
@@ -170,15 +183,23 @@ export default function ForgotPassword() {
                                             type="email"
                                             autoComplete="email"
                                             placeholder="you@company.com"
+                                            aria-invalid={!!errors.email}
                                             className={`${INPUT_BASE} pl-12 pr-4`}
                                         />
                                     </div>
                                 </label>
-                                {errors.email && (<p className="text-sm text-red-600">{errors.email.message}</p>)}
+                                {errors.email && (
+                                    <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                                )}
 
                                 <div className="flex items-center justify-center">
-                                    <button onClick={handleFormSubmit} className="mt-5 w-[400px] p-2 cursor-pointer hover:opacity-80 transition-all text-white flex items-center gap-2 justify-center font-semibold rounded-md bg-blue-600">
-                                        <span>Send OTP</span>
+                                    <button
+                                        type="button"
+                                        disabled={loading}
+                                        onClick={handleFormSubmit}
+                                        className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        <span>{loading ? "Sending..." : "Send OTP"}</span>
                                         <ArrowRight size={18} />
                                     </button>
                                 </div>
@@ -197,10 +218,9 @@ export default function ForgotPassword() {
                                     </h1>
 
                                     <p className="text-sm leading-6 text-slate-500">
-                                        Tell us a bit about your team so we can get your workspace ready.
+                                        We sent a 4-digit code to {workEmail}.
                                     </p>
                                 </div>
-
 
                                 <div className="w-full">
                                     <label className="mb-3 block text-sm font-medium text-slate-700">
@@ -213,24 +233,27 @@ export default function ForgotPassword() {
                                                 key={index}
                                                 id={`otp-${index}`}
                                                 type="text"
-                                                {...register("otp")}
                                                 inputMode="numeric"
                                                 autoComplete={index === 0 ? "one-time-code" : "off"}
                                                 maxLength={1}
                                                 value={digit}
                                                 onChange={(e) => handleOtpChange(e.target.value, index)}
                                                 onKeyDown={(e) => handleOtpKeyDown(e, index)}
+                                                onPaste={handleOtpPaste}
+                                                onFocus={(e) => e.target.select()}
                                                 className="size-14 rounded-xl border border-slate-200 bg-white text-center text-2xl font-semibold text-slate-900 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                                             />
                                         ))}
                                     </div>
-                                    {errors.otp && (<p className="text-sm text-red-600">{errors.otp.message}</p>)}
+                                    {errors.otp && (
+                                        <p className="mt-2 text-sm text-red-600">{errors.otp.message}</p>
+                                    )}
                                 </div>
 
                                 <div className="mt-6 flex items-center justify-center">
                                     <button
                                         type="button"
-                                        disabled={otp.some((digit) => digit === "")}
+                                        disabled={loading || otp.some((digit) => digit === "")}
                                         onClick={handleFormSubmit}
                                         className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
@@ -238,7 +261,6 @@ export default function ForgotPassword() {
                                         <ArrowRight size={18} />
                                     </button>
                                 </div>
-
                             </div>
                         )}
 
@@ -254,58 +276,98 @@ export default function ForgotPassword() {
                                     </h1>
 
                                     <p className="text-sm leading-6 text-slate-500">
-                                        Tell us a bit about your team so we can get your workspace ready.
+                                        Choose a new password for your account.
                                     </p>
                                 </div>
 
-
                                 <div className="flex flex-col gap-4">
-                                    <label className="block text-sm font-medium text-slate-700">
-                                        New Password
+                                    <div>
+                                        <label
+                                            htmlFor="password"
+                                            className="block text-sm font-medium text-slate-700"
+                                        >
+                                            New Password
+                                        </label>
 
-                                        <div className={`${INPUT_BASE} px-4 relative mt-3 items-center  justify-between flex`}>
+                                        <div
+                                            className={`${INPUT_BASE} relative mt-3 flex items-center justify-between gap-2 px-4`}
+                                            aria-invalid={!!errors.password}
+                                        >
                                             <input
+                                                id="password"
                                                 type={showPassword ? "text" : "password"}
                                                 autoComplete="new-password"
                                                 placeholder="Enter new password"
+                                                className="h-full w-full bg-transparent outline-none"
                                                 {...register("password")}
                                             />
-                                            <button onClick={() => setShowPassword(!showPassword)} className="cursor-pointer">{showPassword ? <EyeClosed /> : <Eye />}</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword((s) => !s)}
+                                                className="cursor-pointer text-slate-500"
+                                                aria-label={showPassword ? "Hide password" : "Show password"}
+                                            >
+                                                {showPassword ? <EyeClosed size={18} /> : <Eye size={18} />}
+                                            </button>
                                         </div>
-                                    </label>
-                                    {errors.password && (<p className="text-sm text-red-600">{errors.password.message}</p>)}
+                                        {errors.password && (
+                                            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                                        )}
+                                    </div>
 
-                                    <label className="block text-sm font-medium text-slate-700">
-                                        Confirm Password
+                                    <div>
+                                        <label
+                                            htmlFor="confirmPassword"
+                                            className="block text-sm font-medium text-slate-700"
+                                        >
+                                            Confirm Password
+                                        </label>
 
-                                        <div className={`${INPUT_BASE} px-4 relative mt-3 items-center  justify-between flex`}>
+                                        <div
+                                            className={`${INPUT_BASE} relative mt-3 flex items-center justify-between gap-2 px-4`}
+                                            aria-invalid={!!errors.confirmPassword}
+                                        >
                                             <input
+                                                id="confirmPassword"
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 autoComplete="new-password"
-                                                placeholder="Enter new password"
-
+                                                placeholder="Confirm new password"
+                                                className="h-full w-full bg-transparent outline-none"
+                                                {...register("confirmPassword")}
                                             />
-                                            <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="cursor-pointer">{showConfirmPassword ? <EyeClosed /> : <Eye />}</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowConfirmPassword((s) => !s)}
+                                                className="cursor-pointer text-slate-500"
+                                                aria-label={
+                                                    showConfirmPassword ? "Hide password" : "Show password"
+                                                }
+                                            >
+                                                {showConfirmPassword ? <EyeClosed size={18} /> : <Eye size={18} />}
+                                            </button>
                                         </div>
-                                    </label>
+                                        {errors.confirmPassword && (
+                                            <p className="mt-1 text-sm text-red-600">
+                                                {errors.confirmPassword.message}
+                                            </p>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="flex items-center justify-center">
                                     <button
-                                        onClick={handleFormSubmit}
                                         type="button"
-                                        className="mt-5 cursor-pointer flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80"
+                                        disabled={loading}
+                                        onClick={handleFormSubmit}
+                                        className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
-                                        <span>Reset Password</span>
+                                        <span>{loading ? "Saving..." : "Reset Password"}</span>
                                         <ArrowRight size={18} />
                                     </button>
                                 </div>
-
                             </div>
                         )}
-
                     </section>
-
                 </div>
             </div>
         </main>
