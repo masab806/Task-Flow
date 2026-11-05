@@ -1,5 +1,5 @@
 
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Logo from "../components/Logo"
 import { ArrowLeft, ArrowRight, Check, Eye, EyeClosed, Mail } from "lucide-react"
 import { useState } from "react"
@@ -8,6 +8,7 @@ import AuthService from "../services/AuthService"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { ResetPasswordSchema } from "../lib/ResetSchema"
+import toast from "react-hot-toast"
 
 export default function ForgotPassword() {
     const [step, setStep] = useState<"Email-Step" | "OTP-Step" | "Reset-Password">("Reset-Password")
@@ -36,6 +37,8 @@ export default function ForgotPassword() {
 
     const workEmail = watch("email")
 
+    const navigate = useNavigate()
+
 
     const handleFormSubmit = async ()=> {
         try {
@@ -54,10 +57,18 @@ export default function ForgotPassword() {
 
                 if(enteredOtp.length !== 4) return
 
-                const isVerified = 
+                setStep("Reset-Password")
+            }
+
+            else if (step === "Reset-Password"){
+                await handleSubmit(async (data)=> {
+                    await AuthService.ResetPassword(data)
+                    toast.success("Password Set")
+                    navigate("/")
+                })
             }
         } catch (error) {
-            
+            console.log("Error", error)
         }
     }
 
@@ -166,7 +177,7 @@ export default function ForgotPassword() {
                                 {errors.email && (<p className="text-sm text-red-600">{errors.email.message}</p>)}
 
                                 <div className="flex items-center justify-center">
-                                    <button className="mt-5 w-[400px] p-2 cursor-pointer hover:opacity-80 transition-all text-white flex items-center gap-2 justify-center font-semibold rounded-md bg-blue-600">
+                                    <button onClick={handleFormSubmit} className="mt-5 w-[400px] p-2 cursor-pointer hover:opacity-80 transition-all text-white flex items-center gap-2 justify-center font-semibold rounded-md bg-blue-600">
                                         <span>Send OTP</span>
                                         <ArrowRight size={18} />
                                     </button>
@@ -202,6 +213,7 @@ export default function ForgotPassword() {
                                                 key={index}
                                                 id={`otp-${index}`}
                                                 type="text"
+                                                {...register("otp")}
                                                 inputMode="numeric"
                                                 autoComplete={index === 0 ? "one-time-code" : "off"}
                                                 maxLength={1}
@@ -212,16 +224,14 @@ export default function ForgotPassword() {
                                             />
                                         ))}
                                     </div>
+                                    {errors.otp && (<p className="text-sm text-red-600">{errors.otp.message}</p>)}
                                 </div>
 
                                 <div className="mt-6 flex items-center justify-center">
                                     <button
                                         type="button"
                                         disabled={otp.some((digit) => digit === "")}
-                                        onClick={() => {
-                                            const enteredOtp = otp.join("")
-                                            console.log(enteredOtp)
-                                        }}
+                                        onClick={handleFormSubmit}
                                         className="flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50"
                                     >
                                         <span>Verify OTP</span>
@@ -258,11 +268,12 @@ export default function ForgotPassword() {
                                                 type={showPassword ? "text" : "password"}
                                                 autoComplete="new-password"
                                                 placeholder="Enter new password"
-
+                                                {...register("password")}
                                             />
                                             <button onClick={() => setShowPassword(!showPassword)} className="cursor-pointer">{showPassword ? <EyeClosed /> : <Eye />}</button>
                                         </div>
                                     </label>
+                                    {errors.password && (<p className="text-sm text-red-600">{errors.password.message}</p>)}
 
                                     <label className="block text-sm font-medium text-slate-700">
                                         Confirm Password
@@ -281,6 +292,7 @@ export default function ForgotPassword() {
 
                                 <div className="flex items-center justify-center">
                                     <button
+                                        onClick={handleFormSubmit}
                                         type="button"
                                         className="mt-5 cursor-pointer flex w-full items-center justify-center gap-2 rounded-md bg-blue-600 p-3 font-semibold text-white transition-all hover:opacity-80"
                                     >

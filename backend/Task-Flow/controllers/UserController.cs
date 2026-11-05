@@ -84,5 +84,17 @@ namespace task_flow.controllers
             return Ok(result);
 
         }
+
+        [HttpPost("reset")]
+        public async Task<ActionResult> ResetPassword([FromBody] ResetPasswordDTO dto)
+        {
+            var result = await _authService.ResetPassword(
+                WorkEmail: dto.WorkEmail,
+                OTP: dto.OTP,
+                Password: dto.Password
+            );
+
+            return Ok(result);
+        }
     }
 }

@@ -18,6 +18,11 @@ const AuthService = {
     GenerateOTP: async (data: {email: string})=> {
         const res = await api.post("/api/User/otp", data)
         return res.data;
+    },
+
+    ResetPassword: async (data)=> {
+        const res = await api.post("/api/User/reset", data)
+        return res.data;
     }
 }
 

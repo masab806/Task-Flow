@@ -292,34 +292,34 @@ public class AuthService : IAuthService
         };
     }
 
-    public async Task<string> ResetPassword(string WorkEmail, string otp, string Password)
-    {
-        var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
-        var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
-
-        if(employee == null && founder == null)
+        public async Task<string> ResetPassword(string WorkEmail, string otp, string Password)
         {
-            throw new InvalidDataException("User Not Found!");
+            var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+            var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
+
+            if(employee == null && founder == null)
+            {
+                throw new InvalidDataException("User Not Found!");
+            }
+
+            bool OTPVerified = await VerifyOTP(employee?.id ?? founder!.id, otp);
+
+            if(!OTPVerified)
+            {
+                throw new InvalidCredentialException("OTP Not Verified");
+            };
+
+            var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password, 10);
+
+            if (employee != null)
+            {
+                employee.Password = hashedPassword;
+            }
+            else
+            {
+                founder!.Password = hashedPassword;
+            }
+
+            return "Password Updated";
         }
-
-        bool OTPVerified = await VerifyOTP(employee?.id ?? founder!.id, otp);
-
-        if(!OTPVerified)
-        {
-            throw new InvalidCredentialException("OTP Not Verified");
-        };
-
-        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password, 10);
-
-        if (employee != null)
-        {
-            employee.Password = hashedPassword;
-        }
-        else
-        {
-            founder!.Password = hashedPassword;
-        }
-
-        return "Password Updated";
-    }
 }
