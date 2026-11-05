@@ -41,7 +41,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
-appsettings.json
 
 
 # ASP.NET local development certificates
