@@ -9,6 +9,7 @@ using task_flow.models;
 using task_flow.repositories;
 using task_flow.repositories.EmployeeRepository;
 using task_flow.repositories.OrganizationRepository;
+using task_flow.services.MailService;
 using task_flow.utils;
 
 namespace task_flow.services;
@@ -20,14 +21,16 @@ public class AuthService : IAuthService
     private readonly IEmployeeRepository _employeeRepository;
     private readonly JwtUtil _jwtUtil;
     private readonly IDatabase _redis;
+    private readonly IMailService _mailService;
 
-    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, JwtUtil jwtUtil, IConnectionMultiplexer redis)
+    public AuthService(IFounderRepository founderRepository, IOrganizationRepository organizationRepository, IEmployeeRepository employeeRepository, JwtUtil jwtUtil, IConnectionMultiplexer redis, IMailService mailService)
     {
         _founderRepository = founderRepository;
         _organizationRepository = organizationRepository;
         _employeeRepository = employeeRepository;
         _jwtUtil = jwtUtil;
         _redis = redis.GetDatabase();
+        _mailService = mailService;
     }
 
     public async Task<string> GenerateOTP(string WorkEmail)
@@ -54,6 +57,7 @@ public class AuthService : IAuthService
 
         string JsonString = JsonSerializer.Serialize(CachedPayload);
         await _redis.StringSetAsync(otpKey, JsonString, TimeSpan.FromMinutes(2));
+        await _mailService.SendMail(WorkEmail, otpCode);
 
         return otpCode;
     }
