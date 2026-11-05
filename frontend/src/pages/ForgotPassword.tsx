@@ -4,6 +4,10 @@ import Logo from "../components/Logo"
 import { ArrowLeft, ArrowRight, Check, Eye, EyeClosed, Mail } from "lucide-react"
 import { useState } from "react"
 import { Button } from "../components/supervisor/Shared"
+import AuthService from "../services/AuthService"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { ResetPasswordSchema } from "../lib/ResetSchema"
 
 export default function ForgotPassword() {
     const [step, setStep] = useState<"Email-Step" | "OTP-Step" | "Reset-Password">("Reset-Password")
@@ -19,6 +23,43 @@ export default function ForgotPassword() {
 
     const INPUT_BASE =
         "h-11 w-full rounded-lg border border-slate-200 bg-white text-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100 aria-invalid:border-red-400 aria-invalid:focus:ring-red-100"
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors },
+        watch,
+        trigger
+    } = useForm({
+        resolver: zodResolver(ResetPasswordSchema)
+    })
+
+    const workEmail = watch("email")
+
+
+    const handleFormSubmit = async ()=> {
+        try {
+            if (step === "Email-Step"){
+                const isValid = trigger("email")
+
+                if(!isValid) return
+
+                await AuthService.GenerateOTP({email: workEmail})
+
+                setStep("OTP-Step")
+            }
+
+            else if (step === "OTP-Step"){
+                const enteredOtp = otp.join('')
+
+                if(enteredOtp.length !== 4) return
+
+                const isVerified = 
+            }
+        } catch (error) {
+            
+        }
+    }
 
     const handleOtpChange = (value: string, index: number) => {
         if (!/^\d?$/.test(value)) return
@@ -40,6 +81,7 @@ export default function ForgotPassword() {
             document.getElementById(`otp-${index - 1}`)?.focus()
         }
     }
+
 
     return (
         <main className="min-h-screen bg-[#f7f8fa] text-slate-950">
@@ -113,6 +155,7 @@ export default function ForgotPassword() {
                                         <Mail className="absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
 
                                         <input
+                                            {...register("email")}
                                             type="email"
                                             autoComplete="email"
                                             placeholder="you@company.com"
@@ -120,6 +163,7 @@ export default function ForgotPassword() {
                                         />
                                     </div>
                                 </label>
+                                {errors.email && (<p className="text-sm text-red-600">{errors.email.message}</p>)}
 
                                 <div className="flex items-center justify-center">
                                     <button className="mt-5 w-[400px] p-2 cursor-pointer hover:opacity-80 transition-all text-white flex items-center gap-2 justify-center font-semibold rounded-md bg-blue-600">
@@ -214,9 +258,9 @@ export default function ForgotPassword() {
                                                 type={showPassword ? "text" : "password"}
                                                 autoComplete="new-password"
                                                 placeholder="Enter new password"
-                                                
+
                                             />
-                                            <button onClick={()=> setShowPassword(!showPassword)} className="cursor-pointer">{showPassword ? <EyeClosed/> : <Eye/>}</button>
+                                            <button onClick={() => setShowPassword(!showPassword)} className="cursor-pointer">{showPassword ? <EyeClosed /> : <Eye />}</button>
                                         </div>
                                     </label>
 
@@ -228,9 +272,9 @@ export default function ForgotPassword() {
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 autoComplete="new-password"
                                                 placeholder="Enter new password"
-                                                
+
                                             />
-                                            <button onClick={()=> setShowConfirmPassword(!showConfirmPassword)} className="cursor-pointer">{showConfirmPassword ? <EyeClosed/> : <Eye/>}</button>
+                                            <button onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="cursor-pointer">{showConfirmPassword ? <EyeClosed /> : <Eye />}</button>
                                         </div>
                                     </label>
                                 </div>

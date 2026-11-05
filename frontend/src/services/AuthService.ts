@@ -13,6 +13,11 @@ const AuthService = {
     LoginUser: async (data: LoginData): Promise<LoginResponse> => {
         const res = await api.post<LoginResponse>("/api/User/login", data)
         return res.data;
+    },
+
+    GenerateOTP: async (data: {email: string})=> {
+        const res = await api.post("/api/User/otp", data)
+        return res.data;
     }
 }
 
