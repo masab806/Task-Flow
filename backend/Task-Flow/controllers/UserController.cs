@@ -50,10 +50,11 @@ namespace task_flow.controllers
                 dto.Password
             );
 
-            if(result.EmployeeId == 0)
+            if (result.EmployeeId == 0)
             {
                 return BadRequest(result);
-            };
+            }
+            ;
 
             return Ok(result);
         }
@@ -73,6 +74,15 @@ namespace task_flow.controllers
             }
 
             return Ok(result);
+        }
+
+        [HttpPost("otp")]
+        public async Task<ActionResult> GenerateOtp([FromBody] string WorkEmail)
+        {
+            var result = await _authService.GenerateOTP(WorkEmail);
+
+            return Ok(result);
+
         }
     }
 }

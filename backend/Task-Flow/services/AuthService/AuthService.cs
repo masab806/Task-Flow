@@ -43,7 +43,7 @@ public class AuthService : IAuthService
             throw new InvalidDataException("User Not Found!");
         }
 
-        var otpCode = RandomNumberGenerator.GetInt32(0, 10000).ToString();
+        var otpCode = RandomNumberGenerator.GetInt32(0, 100000).ToString();
         var otpKey = employee != null ? $"otp:{employee.id}" : $"otp:{founder?.id}";
 
         var userId = employee?.id ?? founder?.id;

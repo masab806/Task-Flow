@@ -28,7 +28,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 builder.Services.AddRedis(builder.Configuration);
-builder.Services.AddSingleton(sp => new SmtpClient("://gmail.com")
+builder.Services.AddSingleton(sp => new SmtpClient("smtp.gmail.com")
 {
    Port = 587,
    Credentials = new NetworkCredential(builder.Configuration["email:username"], builder.Configuration["email:password"]), 

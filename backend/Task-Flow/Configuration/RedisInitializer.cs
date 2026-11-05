@@ -10,10 +10,12 @@ public static class RedisInitializer
         IConfiguration configuration
     )
     {
-        var connectionString = configuration["Redis"] ?? "localhost:6739";
+        var connectionString = configuration["Redis"] ?? "localhost:6379";
+        var options = ConfigurationOptions.Parse(connectionString);
+        options.AbortOnConnectFail = false;
 
         services.AddSingleton<IConnectionMultiplexer>(
-            ConnectionMultiplexer.Connect(connectionString);
+            ConnectionMultiplexer.Connect(options)
         );
 
         return services;
