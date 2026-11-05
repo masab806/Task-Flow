@@ -81,6 +81,8 @@ namespace task_flow.controllers
         {
             var result = await _authService.GenerateOTP(WorkEmail);
 
+            Console.WriteLine(result);
+
             return Ok(result);
 
         }

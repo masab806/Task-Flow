@@ -35,56 +35,72 @@ public class AuthService : IAuthService
 
     public async Task<string> GenerateOTP(string WorkEmail)
     {
-        var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
-        var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
-
-        if(employee == null && founder == null)
+        try
         {
-            throw new InvalidDataException("User Not Found!");
+            var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+            var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
+
+            if (employee == null && founder == null)
+            {
+                throw new InvalidDataException("User Not Found!");
+            }
+
+            var otpCode = RandomNumberGenerator.GetInt32(0, 100000).ToString();
+            var otpKey = employee != null ? $"otp:{employee.id}" : $"otp:{founder?.id}";
+
+            var userId = employee?.id ?? founder?.id;
+
+            var CachedPayload = new
+            {
+                Otp = otpCode,
+                UserId = userId
+            };
+
+
+            string JsonString = JsonSerializer.Serialize(CachedPayload);
+            await _redis.StringSetAsync(otpKey, JsonString, TimeSpan.FromMinutes(2));
+            await _mailService.SendMail(WorkEmail, otpCode);
+
+            return otpCode;
         }
-
-        var otpCode = RandomNumberGenerator.GetInt32(0, 100000).ToString();
-        var otpKey = employee != null ? $"otp:{employee.id}" : $"otp:{founder?.id}";
-
-        var userId = employee?.id ?? founder?.id;
-        
-        var CachedPayload = new
+        catch (Exception ex)
         {
-            Otp = otpCode,
-            UserId = userId
-        };
-
-
-        string JsonString = JsonSerializer.Serialize(CachedPayload);
-        await _redis.StringSetAsync(otpKey, JsonString, TimeSpan.FromMinutes(2));
-        await _mailService.SendMail(WorkEmail, otpCode);
-
-        return otpCode;
+            Console.WriteLine(ex);
+            return $"Error: ${ex}";
+        }
     }
 
     public async Task<bool> VerifyOTP(int userId, string otp)
     {
-        var otpKey = $"otp:{userId}";
-
-        if(otpKey == "")
+        try
         {
-            throw new InvalidDataException("OTP Not Found!");
+            var otpKey = $"otp:{userId}";
+
+            if (otpKey == "")
+            {
+                throw new InvalidDataException("OTP Not Found!");
+            }
+
+            var StoredOtp = await _redis.StringGetAsync(otpKey);
+
+            if (otp == "")
+            {
+                throw new InvalidDataException("OTP Not Found!");
+            }
+
+            if (StoredOtp != otp)
+            {
+                throw new InvalidDataException("Invalid OTP!");
+            }
+
+            await _redis.KeyDeleteAsync(otpKey);
+            return true;
         }
-
-        var StoredOtp = await _redis.StringGetAsync(otpKey);
-
-        if(otp == "")
+        catch (Exception ex)
         {
-            throw new InvalidDataException("OTP Not Found!");
+            Console.WriteLine(ex);
+            return false;
         }
-
-        if(StoredOtp != otp)
-        {
-            throw new InvalidDataException("Invalid OTP!");
-        }
-
-        await _redis.KeyDeleteAsync(otpKey);
-        return true;
     }
 
     public async Task<FounderResponse> RegisterFounder(string CompanyRole, string WorkEmail, string FullName, string Password, string OrganizationName, string TeamSize, string CompanyDesignation)
@@ -129,7 +145,7 @@ public class AuthService : IAuthService
             Password = hashedPassword
         };
 
-        if(newFounder == null)
+        if (newFounder == null)
         {
             return new FounderResponse
             {
@@ -150,7 +166,7 @@ public class AuthService : IAuthService
             TeamSize = TeamSize
         };
 
-        if(newOrganization == null)
+        if (newOrganization == null)
         {
             return new FounderResponse
             {
@@ -158,8 +174,8 @@ public class AuthService : IAuthService
             };
         }
 
-       await _organizationRepository.AddOrganization(newOrganization);
-       await _organizationRepository.SaveChangesAsync();
+        await _organizationRepository.AddOrganization(newOrganization);
+        await _organizationRepository.SaveChangesAsync();
 
         return new FounderResponse
         {
@@ -172,41 +188,43 @@ public class AuthService : IAuthService
 
     public async Task<EmployeeResponseDTO> RegisterEmployee(string FullName, string WorkEmail, string Role, string OrganizationName, string CompanyRole, string Password)
     {
-        if(string.IsNullOrWhiteSpace(FullName) || string.IsNullOrEmpty(WorkEmail) || string.IsNullOrWhiteSpace(Role) || string.IsNullOrWhiteSpace(OrganizationName) || string.IsNullOrWhiteSpace(CompanyRole) || string.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(FullName) || string.IsNullOrEmpty(WorkEmail) || string.IsNullOrWhiteSpace(Role) || string.IsNullOrWhiteSpace(OrganizationName) || string.IsNullOrWhiteSpace(CompanyRole) || string.IsNullOrWhiteSpace(Password))
         {
             throw new InvalidDataException("Invalid Fields!");
-        };
+        }
+        ;
 
         var organization = await _organizationRepository.GetOrganizationByName(OrganizationName);
 
-        
-        if(organization == null)
+
+        if (organization == null)
         {
             throw new InvalidOperationException("Organization Not Found");
-        };
+        }
+        ;
 
         var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password);
 
         var newEmployee = new Employee
         {
-          FullName = FullName,
-          WorkEmail = WorkEmail,
-          CompanyRole = CompanyRole,
-          Password = hashedPassword,
-          Role = string.IsNullOrWhiteSpace(Role) ? "Employee" : Role,
-          Organization = organization,
+            FullName = FullName,
+            WorkEmail = WorkEmail,
+            CompanyRole = CompanyRole,
+            Password = hashedPassword,
+            Role = string.IsNullOrWhiteSpace(Role) ? "Employee" : Role,
+            Organization = organization,
         };
 
         await _employeeRepository.CreateEmployee(newEmployee);
         await _employeeRepository.SaveChangesAsync();
 
-        if(newEmployee.id == 0)
+        if (newEmployee.id == 0)
         {
             return new EmployeeResponseDTO
             {
                 EmployeeId = 0,
                 WorkEmail = "",
-                FullName = ""   
+                FullName = ""
             };
         }
 
@@ -223,7 +241,7 @@ public class AuthService : IAuthService
 
     public async Task<UserResponseDTO> LoginUser(string WorkEmail, string Password)
     {
-        if(string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(Password))
+        if (string.IsNullOrWhiteSpace(WorkEmail) || string.IsNullOrWhiteSpace(Password))
         {
             return new UserResponseDTO
             {
@@ -238,7 +256,7 @@ public class AuthService : IAuthService
 
         var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
 
-        if(founder != null && BCrypt.Net.BCrypt.Verify(Password, founder.Password))
+        if (founder != null && BCrypt.Net.BCrypt.Verify(Password, founder.Password))
         {
             var token = _jwtUtil.GenerateToken(
                 founder.id,
@@ -258,9 +276,9 @@ public class AuthService : IAuthService
             };
         }
 
-        var employee =  await _employeeRepository.GetEmployeeByEmail(WorkEmail);
+        var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
 
-        if(employee != null && BCrypt.Net.BCrypt.Verify(Password, employee.Password))
+        if (employee != null && BCrypt.Net.BCrypt.Verify(Password, employee.Password))
         {
             var token = _jwtUtil.GenerateToken(
                 employee.id,
@@ -292,22 +310,25 @@ public class AuthService : IAuthService
         };
     }
 
-        public async Task<string> ResetPassword(string WorkEmail, string otp, string Password)
+    public async Task<string> ResetPassword(string WorkEmail, string otp, string Password)
+    {
+        try
         {
             var employee = await _employeeRepository.GetEmployeeByEmail(WorkEmail);
             var founder = await _founderRepository.GetFounderByEmail(WorkEmail);
 
-            if(employee == null && founder == null)
+            if (employee == null && founder == null)
             {
                 throw new InvalidDataException("User Not Found!");
             }
 
             bool OTPVerified = await VerifyOTP(employee?.id ?? founder!.id, otp);
 
-            if(!OTPVerified)
+            if (!OTPVerified)
             {
                 throw new InvalidCredentialException("OTP Not Verified");
-            };
+            }
+            ;
 
             var hashedPassword = BCrypt.Net.BCrypt.HashPassword(Password, 10);
 
@@ -322,4 +343,10 @@ public class AuthService : IAuthService
 
             return "Password Updated";
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+            return $"Error ${ex}";
+        }
+    }
 }
